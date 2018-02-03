@@ -1,0 +1,19 @@
+// ハンバーガー的アイコン
+@mixin ham_menu_base ($size: 40px) {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: $size;
+  height: $size;
+  cursor: pointer;
+  &:hover {
+
+  }
+
+  .line {
+    margin: 0 auto;
+    width: 90%;
+    height: 3px;
+    background-color: $hamburgerIconColor;
+  }
+}

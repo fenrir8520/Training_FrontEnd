@@ -1,0 +1,58 @@
+$sideMenuColor: #dddddd;
+$sideMenuColor: #fff;
+$sideMenuFontColor: #c6a450;
+$displaiedBackgroundColor: #f6f6f6;
+$displaiedFontColor: #aaa;
+
+@mixin side_menu_base () {
+  left: 0;
+  top: 0;
+  position: fixed;
+  padding: 20px 0;
+  height: 100vh;
+  width: 20%;
+  box-sizing: border-box;
+  background-color: $sideMenuColor;
+  // box-shadow: 0 0 5px rgba(#000, 0.4);
+  color: #414141;
+
+  .list_wrapper {
+    height: 100%;
+    overflow-y: scroll;
+    &::-webkit-scrollbar-style {
+      display: none;
+    }
+
+    .index {
+      padding: 3px 10px 3px 20px;
+      transition: 0.2s;
+      box-sizing: border-box;
+      cursor: pointer;
+      &:hover:not(.display) {
+        opacity: 0.5;
+      }
+    }
+
+    .sub_index {
+      padding: 3px 10px 3px 40px;
+      transition: 0.2s;
+      box-sizing: border-box;
+      cursor: pointer;
+      &:hover:not(.display) {
+        opacity: 0.5;
+      }
+    }
+
+    .display {
+      color: $displaiedFontColor;
+      background-color: $displaiedBackgroundColor;
+      border-right: 0;
+    }
+
+    .sub_tree li:first-of-type {
+      .display {
+        border-top: 0;
+      }
+    }
+  }
+}
