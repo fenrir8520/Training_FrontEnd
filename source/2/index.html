@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="main.css">
+        <title>第2回</title>
+    </head>
+    <body>
+        <div id="app" v-cloak @scroll="getScrollTop">
+            <div class="main">
+                <top-panel :documents="rectContent" :times="2" @side-jump="jump">
+                    <template slot="title_left">
+                        -Basic
+                    </template>
+                    <template slot="title_right">
+                        Method-
+                    </template>
+                    <p slot="title">
+                        第二回フロントエンド勉強会
+                    </p>
+                    <p slot="message">
+                        第二回目です。今までにやったであろうプログラミングの基本構文と
+                        関数定義について詳しくやっていきます。for、if、switch、functionは
+                        JavaScriptだけでなく他のプログラミングでも必要不可欠なので
+                        あやふやにしたままにしないようにね。
+                    </p>
+                </top-panel>
+                <div id="root" class="contents">
+                    <side-panel :documents="rectContent" :scroll-top="scrollTop"
+                                @side-jump="jump">
+                    </side-panel>
+                    <markdown-text :text="text"></markdown-text>
+                </div>
+            </div>
+        </div>
+        <script src="main.js"></script>
+        <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+    </body>
+</html>

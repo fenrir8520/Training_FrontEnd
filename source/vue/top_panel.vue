@@ -36,11 +36,9 @@
                                 Today's Proglam...
                             </p>
                             <ul class="menu_list">
-                                <template v-for="(page, pageIndex) in documents">
-                                    <li v-for="item in page" @click="jump(item.rect.top, pageIndex)">
-                                        {{ item.title }}
-                                    </li>
-                                </template>
+                                <li v-for="item in documents" @click="jump(item.rect.top)">
+                                    {{ item.content }}
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -109,8 +107,8 @@ export default {
         mouseOut (key) {
             this.onMouse[key] = false;
         },
-        jump (position, page) {
-            this.$emit('side-jump', position, page);
+        jump (position) {
+            this.$emit('side-jump', position);
         }
     }
 }

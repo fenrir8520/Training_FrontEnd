@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 5);
+/******/ 	return __webpack_require__(__webpack_require__.s = 17);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -92,6 +92,115 @@ module.exports = g;
 
 /***/ }),
 /* 1 */
+/***/ (function(module, exports) {
+
+/* globals __VUE_SSR_CONTEXT__ */
+
+// IMPORTANT: Do NOT use ES2015 features in this file.
+// This module is a runtime utility for cleaner component module output and will
+// be included in the final webpack user bundle.
+
+module.exports = function normalizeComponent (
+  rawScriptExports,
+  compiledTemplate,
+  functionalTemplate,
+  injectStyles,
+  scopeId,
+  moduleIdentifier /* server only */
+) {
+  var esModule
+  var scriptExports = rawScriptExports = rawScriptExports || {}
+
+  // ES6 modules interop
+  var type = typeof rawScriptExports.default
+  if (type === 'object' || type === 'function') {
+    esModule = rawScriptExports
+    scriptExports = rawScriptExports.default
+  }
+
+  // Vue.extend constructor export interop
+  var options = typeof scriptExports === 'function'
+    ? scriptExports.options
+    : scriptExports
+
+  // render functions
+  if (compiledTemplate) {
+    options.render = compiledTemplate.render
+    options.staticRenderFns = compiledTemplate.staticRenderFns
+    options._compiled = true
+  }
+
+  // functional template
+  if (functionalTemplate) {
+    options.functional = true
+  }
+
+  // scopedId
+  if (scopeId) {
+    options._scopeId = scopeId
+  }
+
+  var hook
+  if (moduleIdentifier) { // server build
+    hook = function (context) {
+      // 2.3 injection
+      context =
+        context || // cached call
+        (this.$vnode && this.$vnode.ssrContext) || // stateful
+        (this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext) // functional
+      // 2.2 with runInNewContext: true
+      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
+        context = __VUE_SSR_CONTEXT__
+      }
+      // inject component styles
+      if (injectStyles) {
+        injectStyles.call(this, context)
+      }
+      // register component module identifier for async chunk inferrence
+      if (context && context._registeredComponents) {
+        context._registeredComponents.add(moduleIdentifier)
+      }
+    }
+    // used by ssr in case component is cached and beforeCreate
+    // never gets called
+    options._ssrRegister = hook
+  } else if (injectStyles) {
+    hook = injectStyles
+  }
+
+  if (hook) {
+    var functional = options.functional
+    var existing = functional
+      ? options.render
+      : options.beforeCreate
+
+    if (!functional) {
+      // inject component registration as beforeCreate hook
+      options.beforeCreate = existing
+        ? [].concat(existing, hook)
+        : [hook]
+    } else {
+      // for template-only hot-reload because in that case the render fn doesn't
+      // go through the normalizer
+      options._injectStyles = hook
+      // register for functioal component in vue file
+      options.render = function renderWithStyleInjection (h, context) {
+        hook.call(context)
+        return existing(h, context)
+      }
+    }
+  }
+
+  return {
+    esModule: esModule,
+    exports: scriptExports,
+    options: options
+  }
+}
+
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -281,115 +390,6 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 2 */
-/***/ (function(module, exports) {
-
-/* globals __VUE_SSR_CONTEXT__ */
-
-// IMPORTANT: Do NOT use ES2015 features in this file.
-// This module is a runtime utility for cleaner component module output and will
-// be included in the final webpack user bundle.
-
-module.exports = function normalizeComponent (
-  rawScriptExports,
-  compiledTemplate,
-  functionalTemplate,
-  injectStyles,
-  scopeId,
-  moduleIdentifier /* server only */
-) {
-  var esModule
-  var scriptExports = rawScriptExports = rawScriptExports || {}
-
-  // ES6 modules interop
-  var type = typeof rawScriptExports.default
-  if (type === 'object' || type === 'function') {
-    esModule = rawScriptExports
-    scriptExports = rawScriptExports.default
-  }
-
-  // Vue.extend constructor export interop
-  var options = typeof scriptExports === 'function'
-    ? scriptExports.options
-    : scriptExports
-
-  // render functions
-  if (compiledTemplate) {
-    options.render = compiledTemplate.render
-    options.staticRenderFns = compiledTemplate.staticRenderFns
-    options._compiled = true
-  }
-
-  // functional template
-  if (functionalTemplate) {
-    options.functional = true
-  }
-
-  // scopedId
-  if (scopeId) {
-    options._scopeId = scopeId
-  }
-
-  var hook
-  if (moduleIdentifier) { // server build
-    hook = function (context) {
-      // 2.3 injection
-      context =
-        context || // cached call
-        (this.$vnode && this.$vnode.ssrContext) || // stateful
-        (this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext) // functional
-      // 2.2 with runInNewContext: true
-      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
-        context = __VUE_SSR_CONTEXT__
-      }
-      // inject component styles
-      if (injectStyles) {
-        injectStyles.call(this, context)
-      }
-      // register component module identifier for async chunk inferrence
-      if (context && context._registeredComponents) {
-        context._registeredComponents.add(moduleIdentifier)
-      }
-    }
-    // used by ssr in case component is cached and beforeCreate
-    // never gets called
-    options._ssrRegister = hook
-  } else if (injectStyles) {
-    hook = injectStyles
-  }
-
-  if (hook) {
-    var functional = options.functional
-    var existing = functional
-      ? options.render
-      : options.beforeCreate
-
-    if (!functional) {
-      // inject component registration as beforeCreate hook
-      options.beforeCreate = existing
-        ? [].concat(existing, hook)
-        : [hook]
-    } else {
-      // for template-only hot-reload because in that case the render fn doesn't
-      // go through the normalizer
-      options._injectStyles = hook
-      // register for functioal component in vue file
-      options.render = function renderWithStyleInjection (h, context) {
-        hook.call(context)
-        return existing(h, context)
-      }
-    }
-  }
-
-  return {
-    esModule: esModule,
-    exports: scriptExports,
-    options: options
-  }
-}
-
-
-/***/ }),
 /* 3 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -467,49 +467,176 @@ module.exports = function normalizeComponent (
 //
 //
 //
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
 
 /* harmony default export */ __webpack_exports__["a"] = ({
     props: {
-        documents: Array
+        text: Object
     },
-    data() {
+    data: function () {
         return {
-            onMouse: {
-                left: false,
-                right: false
+            blockRule: {
+                h1: /^(#\s+([^\n]+\n)((?:.+\n*)*?))(?:#\s|\n|$)/,
+                h2: /^(#{2}\s+([^\n]+\n)((?:.+\n*)*?))(?:#{1,2}\s|\n|$)/,
+                list: /^(-\s+([^\n]+\n)((?:.+\n)*?))(?:\s|\n|$)/
             },
-            indexes: [],
-            root: Element
+            lineRule: {
+                newline: /^\n/,
+                code: /^```((?:(?:(?!```).)*\n)*)```(?:\n|$)/,
+                inline: /^`((?:(?!`)[^\n])*)`(?:\s|\n|$)?/,
+                link: /^\[(.+)\]\s*\((https?:\/\/.*)\)(?:\s|\n|$)/,
+                bold: /^\*{2}\s([^\n]+)\s\*{2}(?:\s|\n|$)/,
+                // text: /^[^\n`](?:(?!`)[^\n])*(?:[^`]|\n|$)/
+                text: /^[^\n`]+(?:[^`]|\n|$)/
+            },
+            contents: []
         };
     },
-    computed: {},
+    created() {
+        this.contents = this.initText(this.text.text);
+    },
     mounted() {},
     methods: {
-        mouseOn(key) {
-            this.onMouse[key] = true;
+        initText: function (text) {
+            let g = /^\n/;
+            let cap;
+            if (cap = g.exec(text)) {
+                text = text.substring(cap.length);
+                text = text.replace(/\r\n|\r/g, '\n').replace(/\t/g, '    ').replace(/\u00a0/g, ' ').replace(/\u2424/g, '\n').replace(/^ +$/gm, '');
+            }
+            return this.getHeading1(text);
         },
-        mouseOut(key) {
-            this.onMouse[key] = false;
+        getHeading1(text) {
+            let cap,
+                result = [];
+            let i = 0;
+            // h1タグを区切りにブロック分け
+            while (text && i < 100) {
+                // newline
+                if (cap = this.lineRule.newline.exec(text)) {
+                    if (cap[0].length > 1) {
+                        result.push({
+                            type: 'newline',
+                            content: ''
+                        });
+                    }
+                    text = text.substring(cap[0].length);
+                }
+                if (cap = this.blockRule.h1.exec(text)) {
+                    let children = this.getHeading2(cap[3]);
+                    result.push({
+                        content: cap[2],
+                        children
+                    });
+                    text = text.substring(cap[1].length);
+                }
+                i++;
+            }
+
+            return result;
         },
-        jump(position, page) {
-            this.$emit('side-jump', position, page);
+        getHeading2(text) {
+            let cap,
+                result = [];
+            let i = 0;
+            while (text && i < 100) {
+                // newline
+                if (cap = this.lineRule.newline.exec(text)) {
+                    if (cap[0].length > 1) {
+                        result.push({
+                            type: 'newline',
+                            content: ''
+                        });
+                    }
+                    text = text.substring(cap[0].length);
+                }
+                // h2タグを区切りにブロック分け
+                if (cap = this.blockRule.h2.exec(text)) {
+                    let children = this.compileChildren(cap[3]);
+                    result.push({
+                        type: 'header',
+                        content: cap[2],
+                        children
+                    });
+                    // console.log(cap[3]);
+                    text = text.substring(cap[1].length);
+                } else {
+                    let children = this.compileChildren(text);
+                    result.push({
+                        type: 'children',
+                        children
+                    });
+                    break;
+                }
+                i++;
+            }
+
+            return result;
+        },
+        compileChildren(text) {
+            let cap,
+                result = [];
+            let i = 0;
+            while (text && i < 100) {
+                // newline
+                if (cap = this.lineRule.newline.exec(text)) {
+                    result.push({
+                        type: 'newline'
+                    });
+                    text = text.substring(cap[0].length);
+                }
+                // code
+                if (cap = this.lineRule.code.exec(text)) {
+                    result.push({
+                        type: 'code',
+                        content: cap[1]
+                    });
+                    text = text.substring(cap[0].length);
+
+                    continue;
+                }
+                // inline code
+                if (cap = this.lineRule.inline.exec(text)) {
+                    // console.log(cap);
+                    result.push({
+                        type: 'inline',
+                        content: cap[1]
+                    });
+                    text = text.substring(cap[0].length);
+                    continue;
+                }
+                // url
+                if (cap = this.lineRule.link.exec(text)) {
+                    result.push({
+                        type: 'link',
+                        url: cap[2],
+                        content: cap[1]
+                    });
+                    text = text.substring(cap[0].length);
+                    continue;
+                }
+                // bold
+                if (cap = this.lineRule.bold.exec(text)) {
+                    result.push({
+                        type: 'bold',
+                        content: cap[1]
+                    });
+                    text = text.substring(cap[0].length);
+                    continue;
+                }
+                // text
+                if (cap = this.lineRule.text.exec(text)) {
+                    // console.log(cap);
+                    result.push({
+                        type: 'text',
+                        content: cap[0]
+                    });
+                    text = text.substring(cap[0].length);
+                    continue;
+                }
+                i++;
+                // console.log(1);
+            }
+            return result;
         }
     }
 });
@@ -549,24 +676,85 @@ module.exports = function normalizeComponent (
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["a"] = ({
     props: {
-        scrollTop: Number,
-        selectedPage: Number,
-        documents: Array
+        documents: Array,
+        times: Number
     },
     data() {
         return {
-            root: Element,
-            indexes: []
+            onMouse: {
+                left: false,
+                right: false
+            },
+            indexes: [],
+            root: Element
         };
     },
     computed: {},
     mounted() {},
     methods: {
-        jump(position, page) {
-            this.$emit('side-jump', position, page);
+        mouseOn(key) {
+            this.onMouse[key] = true;
+        },
+        mouseOut(key) {
+            this.onMouse[key] = false;
+        },
+        jump(position) {
+            this.$emit('side-jump', position);
         }
     }
 });
@@ -576,97 +764,50 @@ module.exports = function normalizeComponent (
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__vue_top_panel_vue__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__vue_main_side_vue__ = __webpack_require__(11);
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
-
-
-
-const mainVue = new __WEBPACK_IMPORTED_MODULE_0_vue__["a" /* default */]({
-    el: '#app',
-    components: {
-        TopPanel: __WEBPACK_IMPORTED_MODULE_1__vue_top_panel_vue__["a" /* default */],
-        SidePanel: __WEBPACK_IMPORTED_MODULE_2__vue_main_side_vue__["a" /* default */]
+/* harmony default export */ __webpack_exports__["a"] = ({
+    props: {
+        scrollTop: Number,
+        documents: Array
     },
-    data: {
-        root: Element,
-        scrollTop: 0,
-        documents: [],
-        selectedPage: 0,
-        loading: []
+    data() {
+        return {
+            root: Element,
+            indexes: []
+        };
     },
-    computed: {
-        documentHeight() {
-            let height = 0;
-            if (this.documents.length) {
-                let length = this.documents[this.selectedPage].length;
-                let top = this.documents[this.selectedPage][0].rect.top;
-                let bottom = this.documents[this.selectedPage][length - 1].rect.bottom;
-                height = bottom - top;
-            }
-            return height;
-        }
-    },
-    created() {
-        let pages = document.getElementsByClassName('page');
-        Array.prototype.forEach.call(pages, (page, index) => {
-            this.loading.push(true);
-        });
-    },
-    mounted() {
-        this.root = document.getElementById('root');
-        this.documents = this.getDocuments();
-    },
+    mounted() {},
     methods: {
-        getScrollTop() {
-            this.scrollTop = this.$el.scrollTop;
-        },
-        getDocuments() {
-            let pages = this.root.getElementsByClassName('page');
-            pages = Array.prototype.map.call(pages, (page, pageNum) => {
-
-                let divisions = page.getElementsByClassName('division');
-                divisions = Array.prototype.map.call(divisions, division => {
-                    let index = Array.prototype.map.call(division.getElementsByTagName('h1'), indexElement => {
-                        return indexElement;
-                    });
-                    let subIndex = Array.prototype.map.call(division.getElementsByClassName('block1'), indexElement => {
-                        return indexElement;
-                    });
-                    let title = index[0].innerText.trim();
-                    let subTitle = [];
-                    subIndex.forEach(element => {
-                        let subTitleElement = element.getElementsByTagName('h2');
-                        if (subTitleElement.length > 0) {
-                            subTitle.push({
-                                title: subTitleElement[0].textContent.trim(),
-                                rect: element.getBoundingClientRect(),
-                                page: pageNum
-                            });
-                        }
-                    });
-                    let rect = division.getBoundingClientRect();
-                    return {
-                        title,
-                        subTitle,
-                        rect,
-                        page: pageNum
-                    };
-                }, this);
-
-                console.dir(divisions);
-                return divisions;
-            }, this);
-            // this.loading.splice(0, 1, true);
-
-            return pages;
-        },
         jump(position, page) {
-            this.selectedPage = page;
-            this.scrollTop = position;
-            this.$el.scrollTop = position;
+            this.$emit('side-jump', position, page);
         }
     }
 });
@@ -11486,7 +11627,7 @@ Vue$3.compile = compileToFunctions;
 
 /* harmony default export */ __webpack_exports__["a"] = (Vue$3);
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(1), __webpack_require__(0), __webpack_require__(7).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(2), __webpack_require__(0), __webpack_require__(7).setImmediate))
 
 /***/ }),
 /* 7 */
@@ -11746,18 +11887,256 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(1)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(2)))
 
 /***/ }),
 /* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_top_panel_vue__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_markdown_text_vue__ = __webpack_require__(3);
 /* unused harmony namespace reexport */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_29523b06_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_top_panel_vue__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_4027964e_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_markdown_text_vue__ = __webpack_require__(10);
 var disposed = false
-var normalizeComponent = __webpack_require__(2)
+var normalizeComponent = __webpack_require__(1)
+/* script */
+
+
+/* template */
+
+/* template functional */
+var __vue_template_functional__ = false
+/* styles */
+var __vue_styles__ = null
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+var Component = normalizeComponent(
+  __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_markdown_text_vue__["a" /* default */],
+  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_4027964e_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_markdown_text_vue__["a" /* default */],
+  __vue_template_functional__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+Component.options.__file = "source/vue/markdown_text.vue"
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-4027964e", Component.options)
+  } else {
+    hotAPI.reload("data-v-4027964e", Component.options)
+  }
+  module.hot.dispose(function (data) {
+    disposed = true
+  })
+})()}
+
+/* harmony default export */ __webpack_exports__["a"] = (Component.exports);
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c(
+    "div",
+    {},
+    _vm._l(_vm.contents, function(h1) {
+      return _c(
+        "div",
+        { staticClass: "division" },
+        [
+          _c("h1", [
+            _vm._v("\n                " + _vm._s(h1.content) + "\n            ")
+          ]),
+          _vm._v(" "),
+          _vm._l(h1.children, function(h2) {
+            return _c(
+              "div",
+              { staticClass: "block1" },
+              [
+                h2.type === "header"
+                  ? [
+                      _c("h2", [
+                        _vm._v(
+                          "\n                        " +
+                            _vm._s(h2.content) +
+                            "\n                    "
+                        )
+                      ]),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        { staticClass: "block2" },
+                        [
+                          _vm._l(h2.children, function(content) {
+                            return [
+                              content.type === "code"
+                                ? [
+                                    _c("pre", [
+                                      _c(
+                                        "code",
+                                        { staticClass: "prettyprint" },
+                                        [_vm._v(_vm._s(content.content) + "\n")]
+                                      ),
+                                      _vm._v("\n")
+                                    ])
+                                  ]
+                                : content.type === "bold"
+                                  ? [
+                                      _c("span", { staticClass: "bold" }, [
+                                        _vm._v(_vm._s(content.content))
+                                      ])
+                                    ]
+                                  : content.type === "inline"
+                                    ? [
+                                        _c("span", { staticClass: "in_code" }, [
+                                          _vm._v(_vm._s(content.content))
+                                        ])
+                                      ]
+                                    : content.type === "link"
+                                      ? [
+                                          _c(
+                                            "a",
+                                            { attrs: { href: content.url } },
+                                            [
+                                              _vm._v(
+                                                "\n                                    " +
+                                                  _vm._s(content.content) +
+                                                  "\n                                "
+                                              )
+                                            ]
+                                          )
+                                        ]
+                                      : content.type === "text"
+                                        ? [
+                                            _vm._v(
+                                              "\n                                " +
+                                                _vm._s(content.content) +
+                                                "\n                            "
+                                            )
+                                          ]
+                                        : content.type === "newline"
+                                          ? [_c("br")]
+                                          : _vm._e()
+                            ]
+                          })
+                        ],
+                        2
+                      )
+                    ]
+                  : h2.type === "children"
+                    ? [
+                        _c(
+                          "div",
+                          { staticClass: "block2" },
+                          [
+                            _vm._l(h2.children, function(content, index) {
+                              return [
+                                content.type === "code"
+                                  ? [
+                                      _c("pre", [
+                                        _c(
+                                          "code",
+                                          { staticClass: "prettyprint" },
+                                          [
+                                            _vm._v(
+                                              _vm._s(content.content) + "\n"
+                                            )
+                                          ]
+                                        ),
+                                        _vm._v("\n")
+                                      ])
+                                    ]
+                                  : content.type === "bold"
+                                    ? [
+                                        _c("span", { staticClass: "bold" }, [
+                                          _vm._v(_vm._s(content.content))
+                                        ])
+                                      ]
+                                    : content.type === "inline"
+                                      ? [
+                                          _c(
+                                            "span",
+                                            { staticClass: "in_code" },
+                                            [_vm._v(_vm._s(content.content))]
+                                          )
+                                        ]
+                                      : content.type === "link"
+                                        ? [
+                                            _c(
+                                              "a",
+                                              { attrs: { href: content.url } },
+                                              [
+                                                _vm._v(
+                                                  "\n                                    " +
+                                                    _vm._s(content.content) +
+                                                    "\n                                "
+                                                )
+                                              ]
+                                            )
+                                          ]
+                                        : content.type === "text"
+                                          ? [
+                                              _vm._v(
+                                                "\n                                " +
+                                                  _vm._s(content.content) +
+                                                  "\n                            "
+                                              )
+                                            ]
+                                          : content.type === "newline"
+                                            ? [_c("br")]
+                                            : _vm._e()
+                              ]
+                            })
+                          ],
+                          2
+                        )
+                      ]
+                    : _vm._e()
+              ],
+              2
+            )
+          })
+        ],
+        2
+      )
+    })
+  )
+}
+var staticRenderFns = []
+render._withStripped = true
+var esExports = { render: render, staticRenderFns: staticRenderFns }
+/* harmony default export */ __webpack_exports__["a"] = (esExports);
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-4027964e", esExports)
+  }
+}
+
+/***/ }),
+/* 11 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_top_panel_vue__ = __webpack_require__(4);
+/* unused harmony namespace reexport */
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_3d6d606b_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_top_panel_vue__ = __webpack_require__(12);
+var disposed = false
+var normalizeComponent = __webpack_require__(1)
 /* script */
 
 
@@ -11773,13 +12152,13 @@ var __vue_scopeId__ = null
 var __vue_module_identifier__ = null
 var Component = normalizeComponent(
   __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_top_panel_vue__["a" /* default */],
-  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_29523b06_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_top_panel_vue__["a" /* default */],
+  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_3d6d606b_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_top_panel_vue__["a" /* default */],
   __vue_template_functional__,
   __vue_styles__,
   __vue_scopeId__,
   __vue_module_identifier__
 )
-Component.options.__file = "text/vue/top_panel.vue"
+Component.options.__file = "source/vue/top_panel.vue"
 
 /* hot reload */
 if (false) {(function () {
@@ -11788,9 +12167,9 @@ if (false) {(function () {
   if (!hotAPI.compatible) return
   module.hot.accept()
   if (!module.hot.data) {
-    hotAPI.createRecord("data-v-29523b06", Component.options)
+    hotAPI.createRecord("data-v-3d6d606b", Component.options)
   } else {
-    hotAPI.reload("data-v-29523b06", Component.options)
+    hotAPI.reload("data-v-3d6d606b", Component.options)
   }
   module.hot.dispose(function (data) {
     disposed = true
@@ -11801,7 +12180,7 @@ if (false) {(function () {
 
 
 /***/ }),
-/* 10 */
+/* 12 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -11824,7 +12203,19 @@ var render = function() {
         }
       },
       [
-        _vm._m(0),
+        _c("div", { staticClass: "split split_left" }, [
+          _c("div", { staticClass: "split_start" }),
+          _vm._v(" "),
+          _c("div", { staticClass: "split_middle" }, [
+            _c("div"),
+            _vm._v(" "),
+            _vm._m(0),
+            _vm._v(" "),
+            _c("h1", { staticClass: "title" }, [_vm._t("title_left")], 2)
+          ]),
+          _vm._v(" "),
+          _c("div", { staticClass: "split_end" })
+        ]),
         _vm._v(" "),
         _c("transition", { attrs: { name: "top" } }, [
           _vm.onMouse.left
@@ -11835,7 +12226,9 @@ var render = function() {
                   _c("div", { staticClass: "split_start" }, [
                     _c("h2", { staticClass: "serif slidein_top" }, [
                       _vm._v(
-                        "\n                        The 1st.\n                    "
+                        "\n                        The " +
+                          _vm._s(_vm.times) +
+                          "st.\n                    "
                       )
                     ]),
                     _vm._v(" "),
@@ -11857,35 +12250,32 @@ var render = function() {
                       _c(
                         "ul",
                         { staticClass: "menu_list" },
-                        [
-                          _vm._l(_vm.documents, function(page, pageIndex) {
-                            return _vm._l(page, function(item) {
-                              return _c(
-                                "li",
-                                {
-                                  on: {
-                                    click: function($event) {
-                                      _vm.jump(item.rect.top, pageIndex)
-                                    }
-                                  }
-                                },
-                                [
-                                  _vm._v(
-                                    "\n                                    " +
-                                      _vm._s(item.title) +
-                                      "\n                                "
-                                  )
-                                ]
+                        _vm._l(_vm.documents, function(item) {
+                          return _c(
+                            "li",
+                            {
+                              on: {
+                                click: function($event) {
+                                  _vm.jump(item.rect.top)
+                                }
+                              }
+                            },
+                            [
+                              _vm._v(
+                                "\n                                " +
+                                  _vm._s(item.content) +
+                                  "\n                            "
                               )
-                            })
-                          })
-                        ],
-                        2
+                            ]
+                          )
+                        })
                       )
                     ])
                   ]),
                   _vm._v(" "),
-                  _c("div", { staticClass: "split_end" })
+                  _c("div", { staticClass: "split_end" }, [
+                    _c("small", [_vm._v("©2018 kei sugimoto")])
+                  ])
                 ]
               )
             : _vm._e()
@@ -11917,7 +12307,9 @@ var render = function() {
           [
             _c("div", { staticClass: "split_start" }),
             _vm._v(" "),
-            _vm._m(1),
+            _c("div", { staticClass: "split_middle" }, [
+              _c("h1", { staticClass: "title" }, [_vm._t("title_right")], 2)
+            ]),
             _vm._v(" "),
             _c("div", { staticClass: "split_end" })
           ]
@@ -11933,19 +12325,12 @@ var render = function() {
                   _vm._v(" "),
                   _c("div", { staticClass: "split_middle" }),
                   _vm._v(" "),
-                  _c("div", { staticClass: "split_end" }, [
-                    _c("p", [
-                      _vm._v(
-                        "\n                        第一回フロントエンド勉強会\n                    "
-                      )
-                    ]),
-                    _vm._v(" "),
-                    _c("p", [
-                      _vm._v(
-                        "\n                        記念すべき第一回目です。モダンなWeb系の技術ではフロントエンドは必須になってきたけど、\n                        かと言ってプログラミングだけ出来てもしょうがないよね。\n                        そこでデザインを直接教えるわけではないけど、トレンドなWebデザインも知って、そこに必要な\n                        技術を想像して解釈できる力も身につけて欲しい。フロントエンドエンジニアとは最強にイケてる人なのだ！\n                    "
-                      )
-                    ])
-                  ])
+                  _c(
+                    "div",
+                    { staticClass: "split_end" },
+                    [_vm._t("title_ja"), _vm._v(" "), _vm._t("message")],
+                    2
+                  )
                 ]
               )
             : _vm._e()
@@ -11960,36 +12345,12 @@ var staticRenderFns = [
     var _vm = this
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "split split_left" }, [
-      _c("div", { staticClass: "split_start" }),
+    return _c("div", { staticClass: "hamburger_icon" }, [
+      _c("div", { staticClass: "line" }),
       _vm._v(" "),
-      _c("div", { staticClass: "split_middle" }, [
-        _c("div"),
-        _vm._v(" "),
-        _c("div", { staticClass: "hamburger_icon" }, [
-          _c("div", { staticClass: "line" }),
-          _vm._v(" "),
-          _c("div", { staticClass: "line" }),
-          _vm._v(" "),
-          _c("div", { staticClass: "line" })
-        ]),
-        _vm._v(" "),
-        _c("h1", { staticClass: "title" }, [
-          _vm._v("\n                    -Intro\n                ")
-        ])
-      ]),
+      _c("div", { staticClass: "line" }),
       _vm._v(" "),
-      _c("div", { staticClass: "split_end" })
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "split_middle" }, [
-      _c("h1", { staticClass: "title" }, [
-        _vm._v("\n                    duction-\n                ")
-      ])
+      _c("div", { staticClass: "line" })
     ])
   }
 ]
@@ -11999,20 +12360,20 @@ var esExports = { render: render, staticRenderFns: staticRenderFns }
 if (false) {
   module.hot.accept()
   if (module.hot.data) {
-    require("vue-hot-reload-api")      .rerender("data-v-29523b06", esExports)
+    require("vue-hot-reload-api")      .rerender("data-v-3d6d606b", esExports)
   }
 }
 
 /***/ }),
-/* 11 */
+/* 13 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_main_side_vue__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_main_side_vue__ = __webpack_require__(5);
 /* unused harmony namespace reexport */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_ba6aeb00_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_main_side_vue__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_163def24_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_main_side_vue__ = __webpack_require__(14);
 var disposed = false
-var normalizeComponent = __webpack_require__(2)
+var normalizeComponent = __webpack_require__(1)
 /* script */
 
 
@@ -12028,13 +12389,13 @@ var __vue_scopeId__ = null
 var __vue_module_identifier__ = null
 var Component = normalizeComponent(
   __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_main_side_vue__["a" /* default */],
-  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_ba6aeb00_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_main_side_vue__["a" /* default */],
+  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_163def24_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_main_side_vue__["a" /* default */],
   __vue_template_functional__,
   __vue_styles__,
   __vue_scopeId__,
   __vue_module_identifier__
 )
-Component.options.__file = "text/vue/main_side.vue"
+Component.options.__file = "source/vue/main_side.vue"
 
 /* hot reload */
 if (false) {(function () {
@@ -12043,9 +12404,9 @@ if (false) {(function () {
   if (!hotAPI.compatible) return
   module.hot.accept()
   if (!module.hot.data) {
-    hotAPI.createRecord("data-v-ba6aeb00", Component.options)
+    hotAPI.createRecord("data-v-163def24", Component.options)
   } else {
-    hotAPI.reload("data-v-ba6aeb00", Component.options)
+    hotAPI.reload("data-v-163def24", Component.options)
   }
   module.hot.dispose(function (data) {
     disposed = true
@@ -12056,7 +12417,7 @@ if (false) {(function () {
 
 
 /***/ }),
-/* 12 */
+/* 14 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12068,40 +12429,39 @@ var render = function() {
     _c("div", { staticClass: "list_wrapper" }, [
       _c(
         "ul",
-        [
-          _vm._l(_vm.documents, function(page, pageIndex) {
-            return _vm._l(page, function(item) {
-              return _c("li", [
-                _c(
-                  "div",
-                  {
-                    staticClass: "index",
-                    class: {
-                      display:
-                        item.rect.top <= _vm.scrollTop &&
-                        item.rect.bottom > _vm.scrollTop &&
-                        pageIndex === _vm.selectedPage
-                    },
-                    on: {
-                      click: function($event) {
-                        _vm.jump(item.rect.top, pageIndex)
-                      }
-                    }
-                  },
-                  [
-                    _vm._v(
-                      "\n                        " +
-                        _vm._s(item.title) +
-                        "\n                    "
-                    )
-                  ]
-                ),
-                _vm._v(" "),
-                _c(
-                  "ul",
-                  { staticClass: "sub_tree" },
-                  _vm._l(item.subTitle, function(subItem) {
-                    return _c("li", [
+        _vm._l(_vm.documents, function(item) {
+          return _c("li", [
+            _c(
+              "div",
+              {
+                staticClass: "index",
+                class: {
+                  display:
+                    item.rect.top <= _vm.scrollTop &&
+                    item.rect.bottom > _vm.scrollTop
+                },
+                on: {
+                  click: function($event) {
+                    _vm.jump(item.rect.top)
+                  }
+                }
+              },
+              [
+                _vm._v(
+                  "\n                    " +
+                    _vm._s(item.content) +
+                    "\n                "
+                )
+              ]
+            ),
+            _vm._v(" "),
+            _c(
+              "ul",
+              { staticClass: "sub_tree" },
+              [
+                _vm._l(item.children, function(subItem) {
+                  return [
+                    _c("li", [
                       _c(
                         "div",
                         {
@@ -12109,31 +12469,30 @@ var render = function() {
                           class: {
                             display:
                               subItem.rect.top <= _vm.scrollTop &&
-                              subItem.rect.bottom > _vm.scrollTop &&
-                              pageIndex === _vm.selectedPage
+                              subItem.rect.bottom > _vm.scrollTop
                           },
                           on: {
                             click: function($event) {
-                              _vm.jump(subItem.rect.top, pageIndex)
+                              _vm.jump(subItem.rect.top)
                             }
                           }
                         },
                         [
                           _vm._v(
                             "\n                                " +
-                              _vm._s(subItem.title) +
+                              _vm._s(subItem.content) +
                               "\n                            "
                           )
                         ]
                       )
                     ])
-                  })
-                )
-              ])
-            })
-          })
-        ],
-        2
+                  ]
+                })
+              ],
+              2
+            )
+          ])
+        })
       )
     ])
   ])
@@ -12145,9 +12504,424 @@ var esExports = { render: render, staticRenderFns: staticRenderFns }
 if (false) {
   module.hot.accept()
   if (module.hot.data) {
-    require("vue-hot-reload-api")      .rerender("data-v-ba6aeb00", esExports)
+    require("vue-hot-reload-api")      .rerender("data-v-163def24", esExports)
   }
 }
+
+/***/ }),
+/* 15 */,
+/* 16 */,
+/* 17 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__text_js__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__vue_markdown_text_vue__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__vue_top_panel_vue__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__vue_main_side_vue__ = __webpack_require__(13);
+
+
+
+
+
+
+const app = new __WEBPACK_IMPORTED_MODULE_0_vue__["a" /* default */]({
+    el: '#app',
+    components: {
+        TopPanel: __WEBPACK_IMPORTED_MODULE_3__vue_top_panel_vue__["a" /* default */],
+        SidePanel: __WEBPACK_IMPORTED_MODULE_4__vue_main_side_vue__["a" /* default */],
+        MarkdownText: __WEBPACK_IMPORTED_MODULE_2__vue_markdown_text_vue__["a" /* default */]
+    },
+    data: {
+        root: Element,
+        scrollTop: 0,
+        documents: [],
+        rectContent: [],
+        text: ''
+    },
+    computed: {},
+    created() {
+        this.text = __WEBPACK_IMPORTED_MODULE_1__text_js__["a" /* default */];
+    },
+    mounted() {
+        this.root = document.getElementById('root');
+        this.$nextTick(function () {
+            this.rectContent = this.getRectContent();
+        }.bind(this));
+    },
+    methods: {
+        getRectContent() {
+            let h1 = this.root.getElementsByTagName('h1');
+            return Array.prototype.map.call(h1, h1El => {
+                let content = '';
+                Array.prototype.forEach.call(h1El.childNodes, node => {
+                    if (node.nodeType === 3) {
+                        content = node.nodeValue;
+                    }
+                });
+                let rect = h1El.getBoundingClientRect();
+                rect = { top: rect.top, bottom: rect.bottom };
+                let parent = h1El.parentElement;
+                let h2 = parent.getElementsByTagName('h2');
+                let children = Array.prototype.map.call(h2, h2El => {
+                    let rect = h2El.getBoundingClientRect();
+                    console.log(rect);
+                    rect = { top: rect.top, bottom: rect.bottom };
+                    let content = '';
+                    Array.prototype.forEach.call(h2El.childNodes, node => {
+                        if (node.nodeType === 3) {
+                            content = node.nodeValue;
+                        }
+                    });
+                    return { rect, content };
+                });
+                return { rect, content, children };
+            });
+        },
+        getScrollTop() {
+            this.scrollTop = this.$el.scrollTop;
+        },
+        jump(position) {
+            this.scrollTop = position;
+            this.$el.scrollTop = position;
+        }
+    }
+});
+
+/***/ }),
+/* 18 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+const _TEXT = `
+# プログラミング基礎おさらい
+## for
+\`\`\`
+for (変数宣言ブロック; 条件式; 1ループ毎の処理) {
+    処理...
+
+    continue; //次のループにスキップ
+    break; //ループ処理を抜ける
+}
+\`\`\`
+
+変数宣言ブロック内で\`let\`を使って宣言するとスコープ内でのみ有効な変数になる
+\`\`\`
+for (var i = 0; i < 10; i++) {
+    console.log(i); // 0...9
+}
+console.log(i); // 10
+
+
+for (let j = 0; j < 10; j++) {
+    console.log(k); // 0...9
+}
+console.log(j); // not defined
+\`\`\`
+
+## while
+\`\`\`
+while (条件式) {
+    処理...
+
+    continue; //次のループにスキップ
+    break; //ループ処理を抜ける
+}
+\`\`\`
+
+ループ数が決まっていないときに使う
+
+具体例
+\`\`\`
+let str = 'オラオラオラオラオラ';
+while (str) {
+    str = str.substring(1);
+}
+\`\`\`
+
+## if
+\`\`\`
+if (条件式1) {
+    処理1
+} else if (条件式2) {
+    処理2
+} else {
+    処理3
+}
+\`\`\`
+
+1ラインでも書ける
+\`\`\`
+let num = 20;
+if (num > 1) console.log(num);
+\`\`\`
+
+## switch
+\`\`\`
+switch (値) {
+    case 定数1:
+        処理
+        break;
+    case 定数2:
+        処理
+    case 定数3:
+        処理
+        break;
+    default:
+        処理
+        break;
+}
+\`\`\`
+値と定数は\`===\`で比較される。
+
+
+
+組み合わせるとこんな感じ
+\`\`\`
+let names = [
+    '1s2u4mi',
+    '2na3shi5m7oto',
+    '3sug4i5mot7o9',
+    '4komu50ro',
+    '5sa4i55t28o'
+],
+lower = [];
+higher = [];
+
+let names = [
+    '1s2u4mi',
+    '2na3shi5m7oto',
+    '3sug4i5mot7o9',
+    '4komu50ro',
+    '5sa4i55t28o'
+],
+lower = [],
+higher = [];
+
+for (let i = 0, len = names.length, name, capture, num, str; i < len; i++) {
+    num = [], str = []
+    name = names[i];
+
+    while (name) {
+        if (capture = name.match(/^[a-zA-z]/)) {
+            // アルファベット一致
+            str += capture[0];
+            name = name.substring(capture[0].length);
+            continue;
+        }
+        if (capture = name.match(/^[0-9]/)) {
+            // 数値一致
+            num.push(capture[0]);
+            name = name.substring(capture[0].length);
+            continue;
+        }
+        if (capture = name.match(/^[^a-zA-Z0-9]/)) {
+            // その他
+            name = name.substring(capture[0].length);
+            continue;
+        }
+    }
+
+    if (num.length < 4) {
+        lower.push(str);
+    } else {
+        higher.push(str);
+    }
+}
+\`\`\`
+
+# 関数定義
+## function
+\`\`\`
+function 関数名 (引数...) {
+    処理...
+    return 返り値;
+}
+
+関数名() // 関数実行
+\`\`\`
+
+\`\`\`
+function test () {
+    return 'test';
+}
+
+var test = function () {
+    return 'test';
+}
+
+上記二つは同じ
+\`\`\`
+
+## returnについて
+関数内で\`return\`をすると\`return\`の後に続く値を関数の実行結果として返すことができる
+\`\`\`
+function increment (num) {
+    return num + 1;
+}
+increment(1) // return 2
+
+function decrement (num) {
+    if (num <= 0) return // returnをした時点で関数の処理を抜ける
+    return num - 1;
+}
+
+decrement(0) // return undefined
+decrement(10) // return 9
+\`\`\`
+
+## 関数のあれこれ
+未定義について
+\`\`\`
+var str1;
+console.log(str1); // undefined (値未定義)
+console.log(str2); // not defined (変数未定義のエラー)
+
+function　test (value1, value2) {
+    console.log(value1);
+    console.log(value2);
+    console.log(value3);
+}
+
+test('test1', 'test2', 'test3'); // どうなる？
+\`\`\`
+
+関数内でcallback
+\`\`\`
+function hundredIncrement (num) {
+    console.log(num);
+    if (num === 100) return;
+    hundredIncrement(num++);
+}
+
+hundredIncrement(0); // 0...100
+\`\`\`
+
+## 部分適用・カリー化
+カリー化とは引数を複数取る関数を作成する際、引数一つずつに分解して適用していくことである（らしい）
+
+
+例えば2つの数値を比較して2つめの値が大きい場合\`true\`、以下の場合\`false\`を返す関数を作成するとする
+\`\`\`
+// 部分適用
+function partialComparisonSix(num) {
+    return comparison(6, num);
+}
+
+// カリー化
+function curryComparison (condition) {
+    return function (num) {
+        return condition < num;
+    }
+}
+
+isOverSix = curryComparison(6);
+    /* return
+        function (num) {
+            return 6 < num;
+        }
+    */
+\`\`\`
+
+## クロージャ
+クロージャとは関数内で宣言した変数をメモリに保存したままにできる機能である。
+
+その変数には外部から直接参照や代入することはできない。
+これによりJavaScriptでは備わっていないカプセル化的な振る舞いができる。
+
+
+\`\`\`
+function myNameManager (name) {
+    var _name = name;
+    var _getName = function () {
+        return _name;
+    }
+    var _setName = function (set) {
+        _name = set;
+    }
+    return {
+        get: _getName,
+        set: _setName
+    };
+}
+
+var nashiName = myNameManager('nashimoto');
+nashiName.get(); // return "nashimoto"
+nashiName.set('梨本');
+nashiName.get(); // return "梨本"
+\`\`\`
+
+上記の関数で言えば、変数\`_name\`の中身は関数が終了する度に通常は破棄されるが、
+クロージャを利用すれば破棄されず変数のデータを保存されたままにできる。
+
+クロージャを利用するポイントは、関数をreturnする関数の中に、変数を宣言する感じ？
+
+returnされる関数でその変数を参照したり、書き換えるようにする。
+
+
+# 関数設計
+## 設計について
+** 関数の設計は非常に大切です。 **
+
+
+処理を分けずダラダラ書き連ねたコードを俗にスパゲッティコードと呼ばれます。（長く複雑に絡みついているという意）
+
+一つの関数内で全ての処理を書くとデータがどの処理でどう変わったがわかりづらく、
+その処理をわかりやすく整理しようにも非常に困難。
+
+なので関数の中でも違う文脈の処理をする必要がある場合、その処理は別の関数に分けるのが非常に得策です。
+
+また処理を分けるにあたってその関数が汎用的に利用できるように設計するのも非常に重要です。
+
+## 実演
+\`<div id="root"></div>\`要素を元に下記のようなDOM構造をJavaScriptで構築する。
+\`\`\`
+<div id="root">
+    <div class="wrapper">
+        <div class="header">
+            <p class="title">
+                タイトルです
+            </p>
+        </div>
+        <div class="body">
+            <ul class="list">
+                <li>list1</li>
+                <li>list2</li>
+                <li>list3</li>
+                <li>list4</li>
+            </ul>
+        </div>
+        <div class="footer">
+            <small>&copy; 2018</small>
+        </div>
+    </div>
+</div>
+\`\`\`
+
+** 処理の流れを考える **
+
+まず大まかに処理の流れを考える。
+
+上記の課題であれば\`<div class="wrapper">\`以降の要素を作成して\`<div id="root">\`にappendChildで挿入する。
+
+
+** もっと詳しく噛み砕く **
+
+要素を作成→クラス名付与→子要素・もしくはテキストを挿入→要素を作成...
+
+↓
+
+必要なメソッドとして、要素作成、クラス名付与、子要素・テキストを挿入する関数を繰り返し実行すればよいことに気づくはず
+
+
+
+`;
+
+/* harmony default export */ __webpack_exports__["a"] = ({
+    text: _TEXT
+});
 
 /***/ })
 /******/ ]);

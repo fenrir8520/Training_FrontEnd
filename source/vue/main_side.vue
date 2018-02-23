@@ -2,27 +2,25 @@
     <div class="side_menu">
         <div class="list_wrapper">
             <ul>
-                <template v-for="(page, pageIndex) in documents">
-                    <li v-for="item in page">
-                        <div class="index" :class="{display: item.rect.top <= scrollTop
-                                                    && item.rect.bottom > scrollTop
-                                                    && pageIndex === selectedPage}"
-                             @click="jump(item.rect.top, pageIndex)">
-                            {{ item.title }}
-                        </div>
-                        <ul class="sub_tree">
-                            <li v-for="subItem in item.subTitle" >
+                <li v-for="item in documents">
+                    <div class="index" :class="{display: item.rect.top <= scrollTop
+                                                && item.rect.bottom > scrollTop}"
+                         @click="jump(item.rect.top)">
+                        {{ item.content }}
+                    </div>
+                    <ul class="sub_tree">
+                        <template v-for="subItem in item.children">
+                            <li>
                                 <div class="sub_index"
-                                     :class="{display: subItem.rect.top <= scrollTop
-                                              && subItem.rect.bottom > scrollTop
-                                              && pageIndex === selectedPage}"
-                                     @click="jump(subItem.rect.top, pageIndex)">
-                                    {{ subItem.title }}
+                                :class="{display: subItem.rect.top <= scrollTop
+                                    && subItem.rect.bottom > scrollTop}"
+                                    @click="jump(subItem.rect.top)">
+                                    {{ subItem.content }}
                                 </div>
                             </li>
-                        </ul>
-                    </li>
-                </template>
+                        </template>
+                    </ul>
+                </li>
             </ul>
         </div>
     </div>
@@ -32,7 +30,6 @@
 export default {
     props: {
         scrollTop: Number,
-        selectedPage: Number,
         documents: Array
     },
     data () {
@@ -40,9 +37,6 @@ export default {
             root: Element,
             indexes: []
         };
-    },
-    computed: {
-
     },
     mounted () {
     },

@@ -1,4 +1,6 @@
 import Vue from 'vue';
+import Text from './markdown_text.js';
+import MarkdownText from '../vue/markdown_text.vue';
 import TopPanel from '../vue/top_panel.vue';
 import SidePanel from '../vue/main_side.vue';
 
@@ -6,32 +8,22 @@ const mainVue = new Vue({
     el: '#app',
     components: {
         TopPanel,
-        SidePanel
+        SidePanel,
+        MarkdownText
     },
     data: {
         root: Element,
         scrollTop: 0,
         documents: [],
         selectedPage: 0,
-        loading: []
+        loading: [],
+        text: ''
     },
     computed: {
-        documentHeight () {
-            let height = 0;
-            if (this.documents.length) {
-                let length = this.documents[this.selectedPage].length;
-                let top = this.documents[this.selectedPage][0].rect.top;
-                let bottom = this.documents[this.selectedPage][length - 1].rect.bottom;
-                height = bottom - top;
-            }
-            return height;
-        }
+
     },
     created () {
-        let pages = document.getElementsByClassName('page');
-        Array.prototype.forEach.call(pages, (page, index) => {
-            this.loading.push(true);
-        });
+        this.text = Text;
     },
     mounted () {
         this.root = document.getElementById('root');

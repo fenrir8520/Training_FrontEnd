@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 5);
+/******/ 	return __webpack_require__(__webpack_require__.s = 15);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -92,6 +92,115 @@ module.exports = g;
 
 /***/ }),
 /* 1 */
+/***/ (function(module, exports) {
+
+/* globals __VUE_SSR_CONTEXT__ */
+
+// IMPORTANT: Do NOT use ES2015 features in this file.
+// This module is a runtime utility for cleaner component module output and will
+// be included in the final webpack user bundle.
+
+module.exports = function normalizeComponent (
+  rawScriptExports,
+  compiledTemplate,
+  functionalTemplate,
+  injectStyles,
+  scopeId,
+  moduleIdentifier /* server only */
+) {
+  var esModule
+  var scriptExports = rawScriptExports = rawScriptExports || {}
+
+  // ES6 modules interop
+  var type = typeof rawScriptExports.default
+  if (type === 'object' || type === 'function') {
+    esModule = rawScriptExports
+    scriptExports = rawScriptExports.default
+  }
+
+  // Vue.extend constructor export interop
+  var options = typeof scriptExports === 'function'
+    ? scriptExports.options
+    : scriptExports
+
+  // render functions
+  if (compiledTemplate) {
+    options.render = compiledTemplate.render
+    options.staticRenderFns = compiledTemplate.staticRenderFns
+    options._compiled = true
+  }
+
+  // functional template
+  if (functionalTemplate) {
+    options.functional = true
+  }
+
+  // scopedId
+  if (scopeId) {
+    options._scopeId = scopeId
+  }
+
+  var hook
+  if (moduleIdentifier) { // server build
+    hook = function (context) {
+      // 2.3 injection
+      context =
+        context || // cached call
+        (this.$vnode && this.$vnode.ssrContext) || // stateful
+        (this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext) // functional
+      // 2.2 with runInNewContext: true
+      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
+        context = __VUE_SSR_CONTEXT__
+      }
+      // inject component styles
+      if (injectStyles) {
+        injectStyles.call(this, context)
+      }
+      // register component module identifier for async chunk inferrence
+      if (context && context._registeredComponents) {
+        context._registeredComponents.add(moduleIdentifier)
+      }
+    }
+    // used by ssr in case component is cached and beforeCreate
+    // never gets called
+    options._ssrRegister = hook
+  } else if (injectStyles) {
+    hook = injectStyles
+  }
+
+  if (hook) {
+    var functional = options.functional
+    var existing = functional
+      ? options.render
+      : options.beforeCreate
+
+    if (!functional) {
+      // inject component registration as beforeCreate hook
+      options.beforeCreate = existing
+        ? [].concat(existing, hook)
+        : [hook]
+    } else {
+      // for template-only hot-reload because in that case the render fn doesn't
+      // go through the normalizer
+      options._injectStyles = hook
+      // register for functioal component in vue file
+      options.render = function renderWithStyleInjection (h, context) {
+        hook.call(context)
+        return existing(h, context)
+      }
+    }
+  }
+
+  return {
+    esModule: esModule,
+    exports: scriptExports,
+    options: options
+  }
+}
+
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -281,121 +390,262 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 2 */
-/***/ (function(module, exports) {
-
-/* globals __VUE_SSR_CONTEXT__ */
-
-// IMPORTANT: Do NOT use ES2015 features in this file.
-// This module is a runtime utility for cleaner component module output and will
-// be included in the final webpack user bundle.
-
-module.exports = function normalizeComponent (
-  rawScriptExports,
-  compiledTemplate,
-  functionalTemplate,
-  injectStyles,
-  scopeId,
-  moduleIdentifier /* server only */
-) {
-  var esModule
-  var scriptExports = rawScriptExports = rawScriptExports || {}
-
-  // ES6 modules interop
-  var type = typeof rawScriptExports.default
-  if (type === 'object' || type === 'function') {
-    esModule = rawScriptExports
-    scriptExports = rawScriptExports.default
-  }
-
-  // Vue.extend constructor export interop
-  var options = typeof scriptExports === 'function'
-    ? scriptExports.options
-    : scriptExports
-
-  // render functions
-  if (compiledTemplate) {
-    options.render = compiledTemplate.render
-    options.staticRenderFns = compiledTemplate.staticRenderFns
-    options._compiled = true
-  }
-
-  // functional template
-  if (functionalTemplate) {
-    options.functional = true
-  }
-
-  // scopedId
-  if (scopeId) {
-    options._scopeId = scopeId
-  }
-
-  var hook
-  if (moduleIdentifier) { // server build
-    hook = function (context) {
-      // 2.3 injection
-      context =
-        context || // cached call
-        (this.$vnode && this.$vnode.ssrContext) || // stateful
-        (this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext) // functional
-      // 2.2 with runInNewContext: true
-      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
-        context = __VUE_SSR_CONTEXT__
-      }
-      // inject component styles
-      if (injectStyles) {
-        injectStyles.call(this, context)
-      }
-      // register component module identifier for async chunk inferrence
-      if (context && context._registeredComponents) {
-        context._registeredComponents.add(moduleIdentifier)
-      }
-    }
-    // used by ssr in case component is cached and beforeCreate
-    // never gets called
-    options._ssrRegister = hook
-  } else if (injectStyles) {
-    hook = injectStyles
-  }
-
-  if (hook) {
-    var functional = options.functional
-    var existing = functional
-      ? options.render
-      : options.beforeCreate
-
-    if (!functional) {
-      // inject component registration as beforeCreate hook
-      options.beforeCreate = existing
-        ? [].concat(existing, hook)
-        : [hook]
-    } else {
-      // for template-only hot-reload because in that case the render fn doesn't
-      // go through the normalizer
-      options._injectStyles = hook
-      // register for functioal component in vue file
-      options.render = function renderWithStyleInjection (h, context) {
-        hook.call(context)
-        return existing(h, context)
-      }
-    }
-  }
-
-  return {
-    esModule: esModule,
-    exports: scriptExports,
-    options: options
-  }
-}
-
-
-/***/ }),
 /* 3 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+/* harmony default export */ __webpack_exports__["a"] = ({
+    props: {
+        text: Object
+    },
+    data: function () {
+        return {
+            blockRule: {
+                h1: /^(#\s+([^\n]+\n)((?:.+\n*)*?))(?:#\s|\n|$)/,
+                h2: /^(#{2}\s+([^\n]+\n)((?:.+\n*)*?))(?:#{1,2}\s|\n|$)/,
+                list: /^(-\s+([^\n]+\n)((?:.+\n)*?))(?:\s|\n|$)/
+            },
+            lineRule: {
+                newline: /^\n/,
+                code: /^```((?:(?:(?!```).)*\n)*)```(?:\n|$)/,
+                inline: /^`((?:(?!`)[^\n])*)`(?:\s|\n|$)?/,
+                link: /^\[(.+)\]\s*\((https?:\/\/.*)\)(?:\s|\n|$)/,
+                bold: /^\*{2}\s([^\n]+)\s\*{2}(?:\s|\n|$)/,
+                // text: /^[^\n`](?:(?!`)[^\n])*(?:[^`]|\n|$)/
+                text: /^[^\n`]+(?:[^`]|\n|$)/
+            },
+            contents: []
+        };
+    },
+    created() {
+        this.contents = this.initText(this.text.text);
+    },
+    mounted() {},
+    methods: {
+        initText: function (text) {
+            let g = /^\n/;
+            let cap;
+            if (cap = g.exec(text)) {
+                text = text.substring(cap.length);
+                text = text.replace(/\r\n|\r/g, '\n').replace(/\t/g, '    ').replace(/\u00a0/g, ' ').replace(/\u2424/g, '\n').replace(/^ +$/gm, '');
+            }
+            return this.getHeading1(text);
+        },
+        getHeading1(text) {
+            let cap,
+                result = [];
+            let i = 0;
+            // h1タグを区切りにブロック分け
+            while (text && i < 100) {
+                // newline
+                if (cap = this.lineRule.newline.exec(text)) {
+                    if (cap[0].length > 1) {
+                        result.push({
+                            type: 'newline',
+                            content: ''
+                        });
+                    }
+                    text = text.substring(cap[0].length);
+                }
+                if (cap = this.blockRule.h1.exec(text)) {
+                    let children = this.getHeading2(cap[3]);
+                    result.push({
+                        content: cap[2],
+                        children
+                    });
+                    text = text.substring(cap[1].length);
+                }
+                i++;
+            }
+
+            return result;
+        },
+        getHeading2(text) {
+            let cap,
+                result = [];
+            let i = 0;
+            while (text && i < 100) {
+                // newline
+                if (cap = this.lineRule.newline.exec(text)) {
+                    if (cap[0].length > 1) {
+                        result.push({
+                            type: 'newline',
+                            content: ''
+                        });
+                    }
+                    text = text.substring(cap[0].length);
+                }
+                // h2タグを区切りにブロック分け
+                if (cap = this.blockRule.h2.exec(text)) {
+                    let children = this.compileChildren(cap[3]);
+                    result.push({
+                        type: 'header',
+                        content: cap[2],
+                        children
+                    });
+                    // console.log(cap[3]);
+                    text = text.substring(cap[1].length);
+                } else {
+                    let children = this.compileChildren(text);
+                    result.push({
+                        type: 'children',
+                        children
+                    });
+                    break;
+                }
+                i++;
+            }
+
+            return result;
+        },
+        compileChildren(text) {
+            let cap,
+                result = [];
+            let i = 0;
+            while (text && i < 100) {
+                // newline
+                if (cap = this.lineRule.newline.exec(text)) {
+                    result.push({
+                        type: 'newline'
+                    });
+                    text = text.substring(cap[0].length);
+                }
+                // code
+                if (cap = this.lineRule.code.exec(text)) {
+                    result.push({
+                        type: 'code',
+                        content: cap[1]
+                    });
+                    text = text.substring(cap[0].length);
+
+                    continue;
+                }
+                // inline code
+                if (cap = this.lineRule.inline.exec(text)) {
+                    // console.log(cap);
+                    result.push({
+                        type: 'inline',
+                        content: cap[1]
+                    });
+                    text = text.substring(cap[0].length);
+                    continue;
+                }
+                // url
+                if (cap = this.lineRule.link.exec(text)) {
+                    result.push({
+                        type: 'link',
+                        url: cap[2],
+                        content: cap[1]
+                    });
+                    text = text.substring(cap[0].length);
+                    continue;
+                }
+                // bold
+                if (cap = this.lineRule.bold.exec(text)) {
+                    result.push({
+                        type: 'bold',
+                        content: cap[1]
+                    });
+                    text = text.substring(cap[0].length);
+                    continue;
+                }
+                // text
+                if (cap = this.lineRule.text.exec(text)) {
+                    // console.log(cap);
+                    result.push({
+                        type: 'text',
+                        content: cap[0]
+                    });
+                    text = text.substring(cap[0].length);
+                    continue;
+                }
+                i++;
+                // console.log(1);
+            }
+            return result;
+        }
+    }
+});
+
+/***/ }),
+/* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 //
 //
 //
@@ -503,19 +753,17 @@ module.exports = function normalizeComponent (
         mouseOut(key) {
             this.onMouse[key] = false;
         },
-        jump(position, page) {
-            this.$emit('side-jump', position, page);
+        jump(position) {
+            this.$emit('side-jump', position);
         }
     }
 });
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-//
-//
 //
 //
 //
@@ -548,7 +796,6 @@ module.exports = function normalizeComponent (
 /* harmony default export */ __webpack_exports__["a"] = ({
     props: {
         scrollTop: Number,
-        selectedPage: Number,
         documents: Array
     },
     data() {
@@ -557,111 +804,10 @@ module.exports = function normalizeComponent (
             indexes: []
         };
     },
-    computed: {},
     mounted() {},
     methods: {
         jump(position, page) {
             this.$emit('side-jump', position, page);
-        }
-    }
-});
-
-/***/ }),
-/* 5 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__vue_top_panel_vue__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__vue_main_side_vue__ = __webpack_require__(11);
-
-
-
-
-const mainVue = new __WEBPACK_IMPORTED_MODULE_0_vue__["a" /* default */]({
-    el: '#app',
-    components: {
-        TopPanel: __WEBPACK_IMPORTED_MODULE_1__vue_top_panel_vue__["a" /* default */],
-        SidePanel: __WEBPACK_IMPORTED_MODULE_2__vue_main_side_vue__["a" /* default */]
-    },
-    data: {
-        root: Element,
-        scrollTop: 0,
-        documents: [],
-        selectedPage: 0,
-        loading: []
-    },
-    computed: {
-        documentHeight() {
-            let height = 0;
-            if (this.documents.length) {
-                let length = this.documents[this.selectedPage].length;
-                let top = this.documents[this.selectedPage][0].rect.top;
-                let bottom = this.documents[this.selectedPage][length - 1].rect.bottom;
-                height = bottom - top;
-            }
-            return height;
-        }
-    },
-    created() {
-        let pages = document.getElementsByClassName('page');
-        Array.prototype.forEach.call(pages, (page, index) => {
-            this.loading.push(true);
-        });
-    },
-    mounted() {
-        this.root = document.getElementById('root');
-        this.documents = this.getDocuments();
-    },
-    methods: {
-        getScrollTop() {
-            this.scrollTop = this.$el.scrollTop;
-        },
-        getDocuments() {
-            let pages = this.root.getElementsByClassName('page');
-            pages = Array.prototype.map.call(pages, (page, pageNum) => {
-
-                let divisions = page.getElementsByClassName('division');
-                divisions = Array.prototype.map.call(divisions, division => {
-                    let index = Array.prototype.map.call(division.getElementsByTagName('h1'), indexElement => {
-                        return indexElement;
-                    });
-                    let subIndex = Array.prototype.map.call(division.getElementsByClassName('block1'), indexElement => {
-                        return indexElement;
-                    });
-                    let title = index[0].innerText.trim();
-                    let subTitle = [];
-                    subIndex.forEach(element => {
-                        let subTitleElement = element.getElementsByTagName('h2');
-                        if (subTitleElement.length > 0) {
-                            subTitle.push({
-                                title: subTitleElement[0].textContent.trim(),
-                                rect: element.getBoundingClientRect(),
-                                page: pageNum
-                            });
-                        }
-                    });
-                    let rect = division.getBoundingClientRect();
-                    return {
-                        title,
-                        subTitle,
-                        rect,
-                        page: pageNum
-                    };
-                }, this);
-
-                console.dir(divisions);
-                return divisions;
-            }, this);
-            // this.loading.splice(0, 1, true);
-
-            return pages;
-        },
-        jump(position, page) {
-            this.selectedPage = page;
-            this.scrollTop = position;
-            this.$el.scrollTop = position;
         }
     }
 });
@@ -11481,7 +11627,7 @@ Vue$3.compile = compileToFunctions;
 
 /* harmony default export */ __webpack_exports__["a"] = (Vue$3);
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(1), __webpack_require__(0), __webpack_require__(7).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(2), __webpack_require__(0), __webpack_require__(7).setImmediate))
 
 /***/ }),
 /* 7 */
@@ -11741,18 +11887,256 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(1)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(2)))
 
 /***/ }),
 /* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_top_panel_vue__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_markdown_text_vue__ = __webpack_require__(3);
 /* unused harmony namespace reexport */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_3d6d606b_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_top_panel_vue__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_4027964e_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_markdown_text_vue__ = __webpack_require__(10);
 var disposed = false
-var normalizeComponent = __webpack_require__(2)
+var normalizeComponent = __webpack_require__(1)
+/* script */
+
+
+/* template */
+
+/* template functional */
+var __vue_template_functional__ = false
+/* styles */
+var __vue_styles__ = null
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+var Component = normalizeComponent(
+  __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_markdown_text_vue__["a" /* default */],
+  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_4027964e_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_markdown_text_vue__["a" /* default */],
+  __vue_template_functional__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+Component.options.__file = "source/vue/markdown_text.vue"
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-4027964e", Component.options)
+  } else {
+    hotAPI.reload("data-v-4027964e", Component.options)
+  }
+  module.hot.dispose(function (data) {
+    disposed = true
+  })
+})()}
+
+/* harmony default export */ __webpack_exports__["a"] = (Component.exports);
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c(
+    "div",
+    {},
+    _vm._l(_vm.contents, function(h1) {
+      return _c(
+        "div",
+        { staticClass: "division" },
+        [
+          _c("h1", [
+            _vm._v("\n                " + _vm._s(h1.content) + "\n            ")
+          ]),
+          _vm._v(" "),
+          _vm._l(h1.children, function(h2) {
+            return _c(
+              "div",
+              { staticClass: "block1" },
+              [
+                h2.type === "header"
+                  ? [
+                      _c("h2", [
+                        _vm._v(
+                          "\n                        " +
+                            _vm._s(h2.content) +
+                            "\n                    "
+                        )
+                      ]),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        { staticClass: "block2" },
+                        [
+                          _vm._l(h2.children, function(content) {
+                            return [
+                              content.type === "code"
+                                ? [
+                                    _c("pre", [
+                                      _c(
+                                        "code",
+                                        { staticClass: "prettyprint" },
+                                        [_vm._v(_vm._s(content.content) + "\n")]
+                                      ),
+                                      _vm._v("\n")
+                                    ])
+                                  ]
+                                : content.type === "bold"
+                                  ? [
+                                      _c("span", { staticClass: "bold" }, [
+                                        _vm._v(_vm._s(content.content))
+                                      ])
+                                    ]
+                                  : content.type === "inline"
+                                    ? [
+                                        _c("span", { staticClass: "in_code" }, [
+                                          _vm._v(_vm._s(content.content))
+                                        ])
+                                      ]
+                                    : content.type === "link"
+                                      ? [
+                                          _c(
+                                            "a",
+                                            { attrs: { href: content.url } },
+                                            [
+                                              _vm._v(
+                                                "\n                                    " +
+                                                  _vm._s(content.content) +
+                                                  "\n                                "
+                                              )
+                                            ]
+                                          )
+                                        ]
+                                      : content.type === "text"
+                                        ? [
+                                            _vm._v(
+                                              "\n                                " +
+                                                _vm._s(content.content) +
+                                                "\n                            "
+                                            )
+                                          ]
+                                        : content.type === "newline"
+                                          ? [_c("br")]
+                                          : _vm._e()
+                            ]
+                          })
+                        ],
+                        2
+                      )
+                    ]
+                  : h2.type === "children"
+                    ? [
+                        _c(
+                          "div",
+                          { staticClass: "block2" },
+                          [
+                            _vm._l(h2.children, function(content, index) {
+                              return [
+                                content.type === "code"
+                                  ? [
+                                      _c("pre", [
+                                        _c(
+                                          "code",
+                                          { staticClass: "prettyprint" },
+                                          [
+                                            _vm._v(
+                                              _vm._s(content.content) + "\n"
+                                            )
+                                          ]
+                                        ),
+                                        _vm._v("\n")
+                                      ])
+                                    ]
+                                  : content.type === "bold"
+                                    ? [
+                                        _c("span", { staticClass: "bold" }, [
+                                          _vm._v(_vm._s(content.content))
+                                        ])
+                                      ]
+                                    : content.type === "inline"
+                                      ? [
+                                          _c(
+                                            "span",
+                                            { staticClass: "in_code" },
+                                            [_vm._v(_vm._s(content.content))]
+                                          )
+                                        ]
+                                      : content.type === "link"
+                                        ? [
+                                            _c(
+                                              "a",
+                                              { attrs: { href: content.url } },
+                                              [
+                                                _vm._v(
+                                                  "\n                                    " +
+                                                    _vm._s(content.content) +
+                                                    "\n                                "
+                                                )
+                                              ]
+                                            )
+                                          ]
+                                        : content.type === "text"
+                                          ? [
+                                              _vm._v(
+                                                "\n                                " +
+                                                  _vm._s(content.content) +
+                                                  "\n                            "
+                                              )
+                                            ]
+                                          : content.type === "newline"
+                                            ? [_c("br")]
+                                            : _vm._e()
+                              ]
+                            })
+                          ],
+                          2
+                        )
+                      ]
+                    : _vm._e()
+              ],
+              2
+            )
+          })
+        ],
+        2
+      )
+    })
+  )
+}
+var staticRenderFns = []
+render._withStripped = true
+var esExports = { render: render, staticRenderFns: staticRenderFns }
+/* harmony default export */ __webpack_exports__["a"] = (esExports);
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-4027964e", esExports)
+  }
+}
+
+/***/ }),
+/* 11 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_top_panel_vue__ = __webpack_require__(4);
+/* unused harmony namespace reexport */
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_3d6d606b_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_top_panel_vue__ = __webpack_require__(12);
+var disposed = false
+var normalizeComponent = __webpack_require__(1)
 /* script */
 
 
@@ -11796,7 +12180,7 @@ if (false) {(function () {
 
 
 /***/ }),
-/* 10 */
+/* 12 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -11866,30 +12250,25 @@ var render = function() {
                       _c(
                         "ul",
                         { staticClass: "menu_list" },
-                        [
-                          _vm._l(_vm.documents, function(page, pageIndex) {
-                            return _vm._l(page, function(item) {
-                              return _c(
-                                "li",
-                                {
-                                  on: {
-                                    click: function($event) {
-                                      _vm.jump(item.rect.top, pageIndex)
-                                    }
-                                  }
-                                },
-                                [
-                                  _vm._v(
-                                    "\n                                    " +
-                                      _vm._s(item.title) +
-                                      "\n                                "
-                                  )
-                                ]
+                        _vm._l(_vm.documents, function(item) {
+                          return _c(
+                            "li",
+                            {
+                              on: {
+                                click: function($event) {
+                                  _vm.jump(item.rect.top)
+                                }
+                              }
+                            },
+                            [
+                              _vm._v(
+                                "\n                                " +
+                                  _vm._s(item.content) +
+                                  "\n                            "
                               )
-                            })
-                          })
-                        ],
-                        2
+                            ]
+                          )
+                        })
                       )
                     ])
                   ]),
@@ -11986,15 +12365,15 @@ if (false) {
 }
 
 /***/ }),
-/* 11 */
+/* 13 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_main_side_vue__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_main_side_vue__ = __webpack_require__(5);
 /* unused harmony namespace reexport */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_163def24_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_main_side_vue__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_163def24_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_main_side_vue__ = __webpack_require__(14);
 var disposed = false
-var normalizeComponent = __webpack_require__(2)
+var normalizeComponent = __webpack_require__(1)
 /* script */
 
 
@@ -12038,7 +12417,7 @@ if (false) {(function () {
 
 
 /***/ }),
-/* 12 */
+/* 14 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12050,40 +12429,39 @@ var render = function() {
     _c("div", { staticClass: "list_wrapper" }, [
       _c(
         "ul",
-        [
-          _vm._l(_vm.documents, function(page, pageIndex) {
-            return _vm._l(page, function(item) {
-              return _c("li", [
-                _c(
-                  "div",
-                  {
-                    staticClass: "index",
-                    class: {
-                      display:
-                        item.rect.top <= _vm.scrollTop &&
-                        item.rect.bottom > _vm.scrollTop &&
-                        pageIndex === _vm.selectedPage
-                    },
-                    on: {
-                      click: function($event) {
-                        _vm.jump(item.rect.top, pageIndex)
-                      }
-                    }
-                  },
-                  [
-                    _vm._v(
-                      "\n                        " +
-                        _vm._s(item.title) +
-                        "\n                    "
-                    )
-                  ]
-                ),
-                _vm._v(" "),
-                _c(
-                  "ul",
-                  { staticClass: "sub_tree" },
-                  _vm._l(item.subTitle, function(subItem) {
-                    return _c("li", [
+        _vm._l(_vm.documents, function(item) {
+          return _c("li", [
+            _c(
+              "div",
+              {
+                staticClass: "index",
+                class: {
+                  display:
+                    item.rect.top <= _vm.scrollTop &&
+                    item.rect.bottom > _vm.scrollTop
+                },
+                on: {
+                  click: function($event) {
+                    _vm.jump(item.rect.top)
+                  }
+                }
+              },
+              [
+                _vm._v(
+                  "\n                    " +
+                    _vm._s(item.content) +
+                    "\n                "
+                )
+              ]
+            ),
+            _vm._v(" "),
+            _c(
+              "ul",
+              { staticClass: "sub_tree" },
+              [
+                _vm._l(item.children, function(subItem) {
+                  return [
+                    _c("li", [
                       _c(
                         "div",
                         {
@@ -12091,31 +12469,30 @@ var render = function() {
                           class: {
                             display:
                               subItem.rect.top <= _vm.scrollTop &&
-                              subItem.rect.bottom > _vm.scrollTop &&
-                              pageIndex === _vm.selectedPage
+                              subItem.rect.bottom > _vm.scrollTop
                           },
                           on: {
                             click: function($event) {
-                              _vm.jump(subItem.rect.top, pageIndex)
+                              _vm.jump(subItem.rect.top)
                             }
                           }
                         },
                         [
                           _vm._v(
                             "\n                                " +
-                              _vm._s(subItem.title) +
+                              _vm._s(subItem.content) +
                               "\n                            "
                           )
                         ]
                       )
                     ])
-                  })
-                )
-              ])
-            })
-          })
-        ],
-        2
+                  ]
+                })
+              ],
+              2
+            )
+          ])
+        })
       )
     ])
   ])
@@ -12130,6 +12507,298 @@ if (false) {
     require("vue-hot-reload-api")      .rerender("data-v-163def24", esExports)
   }
 }
+
+/***/ }),
+/* 15 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__markdown_text_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__vue_markdown_text_vue__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__vue_top_panel_vue__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__vue_main_side_vue__ = __webpack_require__(13);
+
+
+
+
+
+
+const mainVue = new __WEBPACK_IMPORTED_MODULE_0_vue__["a" /* default */]({
+    el: '#app',
+    components: {
+        TopPanel: __WEBPACK_IMPORTED_MODULE_3__vue_top_panel_vue__["a" /* default */],
+        SidePanel: __WEBPACK_IMPORTED_MODULE_4__vue_main_side_vue__["a" /* default */],
+        MarkdownText: __WEBPACK_IMPORTED_MODULE_2__vue_markdown_text_vue__["a" /* default */]
+    },
+    data: {
+        root: Element,
+        scrollTop: 0,
+        documents: [],
+        selectedPage: 0,
+        loading: [],
+        text: ''
+    },
+    computed: {},
+    created() {
+        this.text = __WEBPACK_IMPORTED_MODULE_1__markdown_text_js__["a" /* default */];
+    },
+    mounted() {
+        this.root = document.getElementById('root');
+        this.documents = this.getDocuments();
+    },
+    methods: {
+        getScrollTop() {
+            this.scrollTop = this.$el.scrollTop;
+        },
+        getDocuments() {
+            let pages = this.root.getElementsByClassName('page');
+            pages = Array.prototype.map.call(pages, (page, pageNum) => {
+
+                let divisions = page.getElementsByClassName('division');
+                divisions = Array.prototype.map.call(divisions, division => {
+                    let index = Array.prototype.map.call(division.getElementsByTagName('h1'), indexElement => {
+                        return indexElement;
+                    });
+                    let subIndex = Array.prototype.map.call(division.getElementsByClassName('block1'), indexElement => {
+                        return indexElement;
+                    });
+                    let title = index[0].innerText.trim();
+                    let subTitle = [];
+                    subIndex.forEach(element => {
+                        let subTitleElement = element.getElementsByTagName('h2');
+                        if (subTitleElement.length > 0) {
+                            subTitle.push({
+                                title: subTitleElement[0].textContent.trim(),
+                                rect: element.getBoundingClientRect(),
+                                page: pageNum
+                            });
+                        }
+                    });
+                    let rect = division.getBoundingClientRect();
+                    return {
+                        title,
+                        subTitle,
+                        rect,
+                        page: pageNum
+                    };
+                }, this);
+
+                console.dir(divisions);
+                return divisions;
+            }, this);
+            // this.loading.splice(0, 1, true);
+
+            return pages;
+        },
+        jump(position, page) {
+            this.selectedPage = page;
+            this.scrollTop = position;
+            this.$el.scrollTop = position;
+        }
+    }
+});
+
+/***/ }),
+/* 16 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+let _text = `
+# JavaScriptとは
+[JavaScriptの歴史をざっくりまとめたよ!](https://qiita.com/Mic-U/items/c900a6f62862954d62e0)
+JavaScriptはプロトタイプベース・オブジェクト指向の言語です。
+<ul>
+    <li>Object</li>
+    <li>Class</li>
+    <li>Property</li>
+    <li>Method</li>
+    <li>Instance</li>
+    <li>カプセル化(JavaScriptだとクロージャで対応)</li>
+    <li>継承</li>
+    <li>ポリモーフィズム</li>
+</ul>
+# JavaScriptの記法
+## 変数の宣言
+\`\`\`
+var test1;      // 変数の宣言（再代入、再宣言可）
+let test2;      // 変数の宣言（再代入可、再宣言不可）
+const test3;    // 定数の宣言（再代入、再宣言不可）
+\`\`\`
+## 変数に代入（文字列）
+\`\`\`
+var str1 = 'test';      // test
+var str2 = "test2";      // test2 シングルクォートとダブルクォートの違いはない
+str1 = str2;    // 変数に変数の値を代入
+str1 = 'test';
+str1 = str1 + str2;       // test1test2 文字列の結合
+str1 += str2;           // test1test2test2 ↑の省略記法
+var str3 = ;      // 文字列ですよtest文字文字ですよ テンプレートリテラル
+\`\`\`
+## 変数に代入（数値）
+\`\`\`
+var num1 = 1;      // 1
+var num2 = 10.5;      // 10.5
+num1 = num1 + num1; // 2
+num1 += num2;       // 12.5
+num2 *= 2           // 21
+num3 = 7 % 4        // 3
+\`\`\`
+## 配列
+\`\`\`
+var arr = [];      // []　空の配列
+arr = ['a', 'b'];  // a, b
+arr[0];            // 'a'
+arr[1] = 'BB';     // ['a', 'BB']
+\`\`\`
+## オブジェクト
+\`\`\`
+var obj = {};      // {}　空のオブジェクト
+obj.a = 'A';  // {a: 'A'}
+var obj2 = {
+    a: 'AA',
+    b: 'BB'
+};
+obj2.a;         // AA
+obj2['b'];      // BB
+var key = 'b';
+obj2[key];      // BB
+\`\`\`
+## 関数
+\`\`\`
+// 関数plusを作成
+function plus () {
+    return 1 + 2;
+}
+// 関数plusを実行
+plus()  // 3
+// 関数plusを作成（上記と内容的に同じ）
+var plus = function () {
+    return 1 + 2;
+}
+\`\`\`
+## 変数命名規則
+変数やプロパティ、メソッド名等はプロジェクトによって命名規則がある。<br>
+言語によっても慣習な命名規則がある。
+<ul>
+    <li>キャメルケース</li>
+    <li><span class="in_code">camelCaseVariable</span></li>
+    <li>パスカルケースケース</li>
+    <li><span class="in_code">PascalCaseVariable</span></li>
+    <li>スネークケース</li>
+    <li><span class="in_code">snake_case_variable</span></li>
+    <li>ケバブケース</li>
+    <li><span class="in_code">kbab-case-variable</span></li>
+</ul>
+# プログラミング基礎復習
+## for文
+条件式が\`false\`になるまで処理を実行し続ける
+\`\`\`
+for (開始前の処理; 条件式; 1ループ毎の処理) {
+    処理...
+}
+\`\`\`
+## if文
+条件式が\`true\`の時、直後のスコープ内の処理が行われる<br>
+条件式が\`else if\`や\`else\`で条件分岐させることができる
+\`\`\`
+if (条件式) {
+    処理...
+} else if (評価式) {
+    処理...
+} else {
+    処理...
+}
+\`\`\`
+## switch文
+\`\`\`
+switch (条件式) {
+    case 定数:
+        処理...
+        break;
+    case 定数:
+        処理...
+        break;
+    default:
+        処理...
+        break;
+}
+\`\`\`
+# EventTarget / Node / Element / Attribute / Text / Comment
+## EventTarget
+EventTargetとはEventを受け取りそのためのリスナーを持つオブジェクトのこと<br>
+Event = clickとかmouseoverとか<br>
+オブジェクト = &lt;div&gt;&lt;/div&gt;やObjectとか<br>
+## Node
+NodeとはEventTargetから継承されたインターフェイスで、DOMオブジェクトは
+Nodeから継承されている　=&gt;　同じメソッドを持てる
+## Element
+一般的にHTMLElementのタグやXMLElementのタグで表せられる要素Node。
+AttributeノードやTextノードを内包できる。nodeType: 1
+## Attribute
+要素Nodeに属性値として付けられるNode。idとかclassとかhrefとか。nodeType: 2
+## Text
+要素Nodeに内包できるNode。テキスト。nodeType: 3
+## Comment
+要素Nodeに内包できるNode。コメントアウト。nodeType: 8
+
+
+HTML要素はElementノードであり、要素の属性値はAttributeノード、要素内のテキストはTextノードである。
+
+
+これら全てはNodeである。
+# DOMを操作する
+## 要素名を指定してDOMを取得する
+\`\`\`
+document.getElementById('id名'); // 要素のidを指定して取得
+document.getElementsByClassName('class名') // 要素のclassを指定して配列で取得
+document.getElementsByTagName('tag名') // 要素のtagを指定して配列で取得
+document.querySelector('セレクタ名') // セレクタ名で指定して一番最初の要素を取得
+document.querySelectorAll('セレクタ名') // セレクタ名で指定して該当する要素を配列で取得
+\`\`\`
+
+## 位置関係を指定してDOMを取得する
+\`\`\`
+// Element系
+element.parentElement // elementの親要素を取得
+element.firstElementChild // elementの子要素の最初の要素を取得
+element.lastElementChild // elementの子要素の最後の要素を取得
+element.children // elementの全ての子要素を配列で取得
+element.previousElementSibling // elementの一つ前の要素を取得
+element.nextElementSibling // elementの一つ次の要素を取得
+// Node系
+node.parentNode // nodeの親ノードを取得
+node.firstChild // nodeの子ノードの最初のノードを取得
+node.lastChild // nodeの子ノードの最後のノードを取得
+node.childNodes // nodeの全ての子ノードを配列で取得
+node.previousSibling // nodeの一つ前のノードを取得
+node.nextSibling // nodeの一つ次のノードを取得
+\`\`\`
+## 要素作成
+\`\`\`
+document.createElement('要素名') // 要素を作成
+document.createTextNode('テキスト') // テキストノード作成
+document.createAttributeNode('属性名') //属性ノード作成
+element.appendChild('要素名') // elementの最後尾に要素を追加
+element.removeChild('要素名') // element内の要素を削除
+\`\`\`
+## DOM属性
+\`\`\`
+element.id // id名
+element.className // class名
+element.classList.add('クラス名') // クラス名を追加
+element.classList.remove('クラス名') // クラス名を削除
+element.classList.contains('クラス名') // クラス名があるかBooleanで返す
+element.style // style
+element.style.setProperty('プロパティ名', '値') // styleを追加する
+element.style.removeProperty('プロパティ名') // styleを削除する
+\`\`\`
+`;
+
+/* harmony default export */ __webpack_exports__["a"] = ({
+    text: _text
+});
 
 /***/ })
 /******/ ]);

@@ -50,8 +50,13 @@ pre {
   margin: 0 20px;
   line-height: 1.8;
 }
+
 .in_code {
   background-color: $inCodeBackgroundColor;
   padding: 0 5px;
   font-family: monospace;
+}
+
+.bold {
+  font-weight: bold;
 }
