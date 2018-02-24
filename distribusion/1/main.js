@@ -470,7 +470,8 @@ process.umask = function() { return 0; };
 
 /* harmony default export */ __webpack_exports__["a"] = ({
     props: {
-        text: Object
+        text: Object,
+        value: Array
     },
     data: function () {
         return {
@@ -488,13 +489,19 @@ process.umask = function() { return 0; };
                 // text: /^[^\n`](?:(?!`)[^\n])*(?:[^`]|\n|$)/
                 text: /^[^\n`]+(?:[^`]|\n|$)/
             },
-            contents: []
+            contents: [],
+            root: {}
         };
     },
     created() {
         this.contents = this.initText(this.text.text);
     },
-    mounted() {},
+    mounted() {
+        this.root = document.getElementById('root');
+        let content = this.getRectContent();
+        this.rectContent = content;
+        this.outputContnt(content);
+    },
     methods: {
         initText: function (text) {
             let g = /^\n/;
@@ -557,7 +564,6 @@ process.umask = function() { return 0; };
                         content: cap[2],
                         children
                     });
-                    // console.log(cap[3]);
                     text = text.substring(cap[1].length);
                 } else {
                     let children = this.compileChildren(text);
@@ -596,7 +602,6 @@ process.umask = function() { return 0; };
                 }
                 // inline code
                 if (cap = this.lineRule.inline.exec(text)) {
-                    // console.log(cap);
                     result.push({
                         type: 'inline',
                         content: cap[1]
@@ -625,7 +630,6 @@ process.umask = function() { return 0; };
                 }
                 // text
                 if (cap = this.lineRule.text.exec(text)) {
-                    // console.log(cap);
                     result.push({
                         type: 'text',
                         content: cap[0]
@@ -634,9 +638,39 @@ process.umask = function() { return 0; };
                     continue;
                 }
                 i++;
-                // console.log(1);
             }
             return result;
+        },
+        getRectContent() {
+            let h1 = this.root.getElementsByTagName('h1');
+            return Array.prototype.map.call(h1, h1El => {
+                let content = '';
+                Array.prototype.forEach.call(h1El.childNodes, node => {
+                    if (node.nodeType === 3) {
+                        content = node.nodeValue;
+                    }
+                });
+                let parent = h1El.parentElement;
+                let rect = parent.getBoundingClientRect();
+                rect = { top: rect.top, bottom: rect.bottom };
+                let h2 = parent.getElementsByTagName('h2');
+                let children = Array.prototype.map.call(h2, h2El => {
+                    let parent = h2El.parentElement;
+                    let rect = parent.getBoundingClientRect();
+                    rect = { top: rect.top, bottom: rect.bottom };
+                    let content = '';
+                    Array.prototype.forEach.call(h2El.childNodes, node => {
+                        if (node.nodeType === 3) {
+                            content = node.nodeValue;
+                        }
+                    });
+                    return { rect, content };
+                });
+                return { rect, content, children };
+            });
+        },
+        outputContnt(content) {
+            this.$emit('input', content);
         }
     }
 });
@@ -12533,67 +12567,20 @@ const mainVue = new __WEBPACK_IMPORTED_MODULE_0_vue__["a" /* default */]({
         MarkdownText: __WEBPACK_IMPORTED_MODULE_2__vue_markdown_text_vue__["a" /* default */]
     },
     data: {
-        root: Element,
         scrollTop: 0,
-        documents: [],
-        selectedPage: 0,
-        loading: [],
+        rectContent: [],
         text: ''
     },
     computed: {},
     created() {
         this.text = __WEBPACK_IMPORTED_MODULE_1__markdown_text_js__["a" /* default */];
     },
-    mounted() {
-        this.root = document.getElementById('root');
-        this.documents = this.getDocuments();
-    },
+    mounted() {},
     methods: {
         getScrollTop() {
             this.scrollTop = this.$el.scrollTop;
         },
-        getDocuments() {
-            let pages = this.root.getElementsByClassName('page');
-            pages = Array.prototype.map.call(pages, (page, pageNum) => {
-
-                let divisions = page.getElementsByClassName('division');
-                divisions = Array.prototype.map.call(divisions, division => {
-                    let index = Array.prototype.map.call(division.getElementsByTagName('h1'), indexElement => {
-                        return indexElement;
-                    });
-                    let subIndex = Array.prototype.map.call(division.getElementsByClassName('block1'), indexElement => {
-                        return indexElement;
-                    });
-                    let title = index[0].innerText.trim();
-                    let subTitle = [];
-                    subIndex.forEach(element => {
-                        let subTitleElement = element.getElementsByTagName('h2');
-                        if (subTitleElement.length > 0) {
-                            subTitle.push({
-                                title: subTitleElement[0].textContent.trim(),
-                                rect: element.getBoundingClientRect(),
-                                page: pageNum
-                            });
-                        }
-                    });
-                    let rect = division.getBoundingClientRect();
-                    return {
-                        title,
-                        subTitle,
-                        rect,
-                        page: pageNum
-                    };
-                }, this);
-
-                console.dir(divisions);
-                return divisions;
-            }, this);
-            // this.loading.splice(0, 1, true);
-
-            return pages;
-        },
-        jump(position, page) {
-            this.selectedPage = page;
+        jump(position) {
             this.scrollTop = position;
             this.$el.scrollTop = position;
         }

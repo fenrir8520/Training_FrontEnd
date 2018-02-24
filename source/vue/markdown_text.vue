@@ -74,7 +74,8 @@
 <script>
 export default {
     props: {
-        text: Object
+        text: Object,
+        value: Array
     },
     data: function () {
         return {
@@ -92,13 +93,18 @@ export default {
                 // text: /^[^\n`](?:(?!`)[^\n])*(?:[^`]|\n|$)/
                 text: /^[^\n`]+(?:[^`]|\n|$)/
             },
-            contents: []
+            contents: [],
+            root: {}
         }
     },
     created () {
         this.contents = this.initText(this.text.text);
     },
     mounted () {
+        this.root = document.getElementById('root');
+        let content = this.getRectContent();
+        this.rectContent = content;
+        this.outputContnt(content);
     },
     methods: {
         initText: function (text) {
@@ -166,7 +172,6 @@ export default {
                         content: cap[2],
                         children
                     });
-                    // console.log(cap[3]);
                     text = text.substring(cap[1].length);
                 } else {
                     let children = this.compileChildren(text);
@@ -204,7 +209,6 @@ export default {
                 }
                 // inline code
                 if (cap = this.lineRule.inline.exec(text)) {
-                    // console.log(cap);
                     result.push({
                         type: 'inline',
                         content: cap[1]
@@ -233,7 +237,6 @@ export default {
                 }
                 // text
                 if (cap = this.lineRule.text.exec(text)) {
-                    // console.log(cap);
                     result.push({
                         type: 'text',
                         content: cap[0]
@@ -242,10 +245,40 @@ export default {
                     continue;
                 }
                 i++
-                // console.log(1);
             }
             return result
         },
+        getRectContent () {
+            let h1 = this.root.getElementsByTagName('h1');
+            return Array.prototype.map.call(h1, h1El => {
+                let content = '';
+                Array.prototype.forEach.call(h1El.childNodes, node => {
+                    if (node.nodeType === 3) {
+                        content = node.nodeValue;
+                    }
+                });
+                let parent = h1El.parentElement;
+                let rect = parent.getBoundingClientRect();
+                rect = {top: rect.top, bottom: rect.bottom}
+                let h2 = parent.getElementsByTagName('h2');
+                let children = Array.prototype.map.call(h2, h2El => {
+                    let parent = h2El.parentElement;
+                    let rect = parent.getBoundingClientRect();
+                    rect = {top: rect.top, bottom: rect.bottom}
+                    let content = '';
+                    Array.prototype.forEach.call(h2El.childNodes, node => {
+                        if (node.nodeType === 3) {
+                            content =  node.nodeValue;
+                        }
+                    });
+                    return {rect, content};
+                });
+                return {rect, content, children};
+            });
+        },
+        outputContnt(content) {
+            this.$emit('input', content);
+        }
     }
 }
 </script>

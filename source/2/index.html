@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <link rel="stylesheet" href="main.css">
+        <link href="https://fonts.googleapis.com/css?family=Antic+Slab|Josefin+Slab|Dosis" rel="stylesheet">
         <title>第2回</title>
     </head>
     <body>
@@ -29,7 +30,7 @@
                     <side-panel :documents="rectContent" :scroll-top="scrollTop"
                                 @side-jump="jump">
                     </side-panel>
-                    <markdown-text :text="text"></markdown-text>
+                    <markdown-text :text="text" v-model="rectContent"></markdown-text>
                 </div>
             </div>
         </div>

@@ -9,7 +9,7 @@
     <body>
         <div id="app" v-cloak @scroll="getScrollTop">
             <div class="main">
-                <top-panel :documents="documents" :times="1" @side-jump="jump">
+                <top-panel :documents="rectContent" :times="1" @side-jump="jump">
                     <template slot="title_left">
                         -Intro
                     </template>
@@ -27,9 +27,10 @@
                     </p>
                 </top-panel>
                 <div id="root" class="contents">
-                    <side-panel :documents="documents" :scroll-top="scrollTop"
-                                :selected-page="selectedPage" @side-jump="jump"></side-panel>
-                <markdown-text :text="text"></markdown-text>
+                    <side-panel :documents="rectContent" :scroll-top="scrollTop"
+                                @side-jump="jump">
+                    </side-panel>
+                <markdown-text :text="text" v-model="rectContent"></markdown-text>
                 </div>
             </div>
         </div>
