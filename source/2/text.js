@@ -19,7 +19,7 @@ console.log(i); // 10
 
 
 for (let j = 0; j < 10; j++) {
-    console.log(k); // 0...9
+    console.log(j); // 0...9
 }
 console.log(j); // not defined
 \`\`\`
@@ -90,21 +90,11 @@ let names = [
     '4komu50ro',
     '5sa4i55t28o'
 ],
-lower = [];
-higher = [];
-
-let names = [
-    '1s2u4mi',
-    '2na3shi5m7oto',
-    '3sug4i5mot7o9',
-    '4komu50ro',
-    '5sa4i55t28o'
-],
 lower = [],
 higher = [];
 
 for (let i = 0, len = names.length, name, capture, num, str; i < len; i++) {
-    num = [], str = []
+    num = [], str = '';
     name = names[i];
 
     while (name) {
@@ -196,7 +186,7 @@ test('test1', 'test2', 'test3'); // どうなる？
 function hundredIncrement (num) {
     console.log(num);
     if (num === 100) return;
-    hundredIncrement(num++);
+    hundredIncrement(++num);
 }
 
 hundredIncrement(0); // 0...100
