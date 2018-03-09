@@ -478,7 +478,7 @@ process.umask = function() { return 0; };
             blockRule: {
                 h1: /^(#\s+([^\n]+\n)((?:.+\n*)*?))(?:#\s|\n|$)/,
                 h2: /^(#{2}\s+([^\n]+\n)((?:.+\n*)*?))(?:#{1,2}\s|\n|$)/,
-                list: /^(-\s+([^\n]+\n)((?:.+\n)*?))(?:\s|\n|$)/
+                list: /^(-\s+[^\n]+)(?:\s|\n|$)/
             },
             lineRule: {
                 newline: /^\n/,
@@ -486,7 +486,6 @@ process.umask = function() { return 0; };
                 inline: /^`((?:(?!`)[^\n])*)`(?:\s|\n|$)?/,
                 link: /^\[(.+)\]\s*\((https?:\/\/.*)\)(?:\s|\n|$)/,
                 bold: /^\*{2}\s([^\n]+)\s\*{2}(?:\s|\n|$)/,
-                // text: /^[^\n`](?:(?!`)[^\n])*(?:[^`]|\n|$)/
                 text: /^[^\n`]+(?:[^`]|\n|$)/
             },
             contents: [],
@@ -589,6 +588,16 @@ process.umask = function() { return 0; };
                         type: 'newline'
                     });
                     text = text.substring(cap[0].length);
+                }
+                // list
+                if (cap = this.blockRule.list.exec(text)) {
+                    result.push({
+                        type: 'list',
+                        content: cap[1]
+                    });
+                    text = text.substring(cap[0].length);
+
+                    continue;
                 }
                 // code
                 if (cap = this.lineRule.code.exec(text)) {

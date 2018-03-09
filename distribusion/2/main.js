@@ -478,7 +478,7 @@ process.umask = function() { return 0; };
             blockRule: {
                 h1: /^(#\s+([^\n]+\n)((?:.+\n*)*?))(?:#\s|\n|$)/,
                 h2: /^(#{2}\s+([^\n]+\n)((?:.+\n*)*?))(?:#{1,2}\s|\n|$)/,
-                list: /^(-\s+([^\n]+\n)((?:.+\n)*?))(?:\s|\n|$)/
+                list: /^(-\s+[^\n]+)(?:\s|\n|$)/
             },
             lineRule: {
                 newline: /^\n/,
@@ -486,7 +486,6 @@ process.umask = function() { return 0; };
                 inline: /^`((?:(?!`)[^\n])*)`(?:\s|\n|$)?/,
                 link: /^\[(.+)\]\s*\((https?:\/\/.*)\)(?:\s|\n|$)/,
                 bold: /^\*{2}\s([^\n]+)\s\*{2}(?:\s|\n|$)/,
-                // text: /^[^\n`](?:(?!`)[^\n])*(?:[^`]|\n|$)/
                 text: /^[^\n`]+(?:[^`]|\n|$)/
             },
             contents: [],
@@ -589,6 +588,16 @@ process.umask = function() { return 0; };
                         type: 'newline'
                     });
                     text = text.substring(cap[0].length);
+                }
+                // list
+                if (cap = this.blockRule.list.exec(text)) {
+                    result.push({
+                        type: 'list',
+                        content: cap[1]
+                    });
+                    text = text.substring(cap[0].length);
+
+                    continue;
                 }
                 // code
                 if (cap = this.lineRule.code.exec(text)) {
@@ -12615,7 +12624,7 @@ console.log(i); // 10
 
 
 for (let j = 0; j < 10; j++) {
-    console.log(k); // 0...9
+    console.log(j); // 0...9
 }
 console.log(j); // not defined
 \`\`\`
@@ -12686,21 +12695,11 @@ let names = [
     '4komu50ro',
     '5sa4i55t28o'
 ],
-lower = [];
-higher = [];
-
-let names = [
-    '1s2u4mi',
-    '2na3shi5m7oto',
-    '3sug4i5mot7o9',
-    '4komu50ro',
-    '5sa4i55t28o'
-],
 lower = [],
 higher = [];
 
 for (let i = 0, len = names.length, name, capture, num, str; i < len; i++) {
-    num = [], str = []
+    num = [], str = '';
     name = names[i];
 
     while (name) {
@@ -12792,7 +12791,7 @@ test('test1', 'test2', 'test3'); // どうなる？
 function hundredIncrement (num) {
     console.log(num);
     if (num === 100) return;
-    hundredIncrement(num++);
+    hundredIncrement(++num);
 }
 
 hundredIncrement(0); // 0...100
