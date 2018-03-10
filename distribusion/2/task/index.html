@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>2TASK</title>
+        <link rel="stylesheet" href="main.css">
+    </head>
+    <body>
+        <div>
+            <h2>
+                次の処理をする関数を組み立てましょう
+            </h2>
+            <p>
+                用意した配列を用いて次のようなDOM要素を作る<br>
+                &lt;div id="task1"&gt;&lt;/div&gt;は用意してあります。
+            </p>
+            <pre><code class="prettyprint">
+&lt;div id="task1"&gt;
+    &lt;div class="book"&gt;
+        &lt;h1&gt;
+            夏目漱石
+        &lt;/h1&gt;
+        &lt;p&gt;
+            我が輩は猫である
+        &lt;/p&gt;
+    &lt;/div&gt;
+    ...
+    ...
+&lt;/div&gt;
+            </code></pre>
+            <pre><code class="prettyprint">
+var array1 = [
+    {
+        person: '夏目漱石',
+        title: '我が輩は猫である'
+    },
+    {
+        person: '福沢諭吉',
+        title: '天は人の上に人を創らず'
+    },
+    {
+        person: '宮沢賢治',
+        title: '雨にも負けず、風にも負けず'
+    },
+    {
+        person: '太宰治',
+        title: '羅生門'
+    }
+];
+            </code></pre>
+            <div id="task1"> </div>
+        </div>
+
+        <div>
+            <h2>
+                次の処理をする関数を組み立てましょう
+            </h2>
+            <p>
+                &lt;div id="task2"&gt;&lt;/div&gt;の中に今月のカレンダー作る<br>
+                &lt;div id="task2"&gt;&lt;/div&gt;は用意してあります。<br>
+                余裕があれば月切り替えボタンをつけましょう
+            </p>
+        </div>
+        <div id="task2">
+
+        </div>
+        <script src="main.js"></script>
+        <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+    </body>
+</html>
