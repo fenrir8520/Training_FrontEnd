@@ -268,12 +268,33 @@ var test = new TestConstructor('安倍晋三');
 
 ## thisとprototype
 コンストラクタ内の\`this\`はインスタンス化したオブジェクトを指す
-\`\`\`
-funciton TestConstructor () {
-    this.test = 'TEST';
-}
-\`\`\`
 
+そして\`this\`の値はインスタンス毎に固有で定義される値である。
+
+それに対し\`prototype\`はコンストラクタが持っている値で、
+インスタンスからはコンストラクタのprototypeを参照することができるようになる
+
+（そのコンストラクタで作成されたインスタンスでは全て共通）
+
+\`\`\`
+function Test () {
+    this.unique_value = 'Unique';
+}
+Test.prototype.proto_value = 'Prototype';
+
+var test1 = new Test();
+var test2 = new Test();
+
+console.log('test1 : ' + test1.unique_value + ' | test2 : ' + test2.unique_value); //'test1 : Unique | test2 : Unique'
+console.log('test1 : ' + test1.proto_value + ' | test2 : ' + test2.proto_value); //'test1 : Prototype | test2 : Prototype'
+
+test1.unique_value = 'test1_Unique';
+test1.proto_value = 'test1_Prototype';
+
+console.log('test1 : ' + test1.unique_value + ' | test2 : ' + test2.unique_value); //'test1 : test1_Unique | test2 : Unique'
+console.log('test1 : ' + test1.proto_value + ' | test2 : ' + test2.proto_value); //'test1 : test1_Prototype | test2 : test1_Prototype'
+
+\`\`\`
 
 
 `
