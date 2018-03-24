@@ -93,17 +93,18 @@ export default {
                 text: /^[^\n`]+(?:[^`]|\n|$)/
             },
             contents: [],
-            root: {}
+            root: {},
+            rectContent: []
         }
     },
     created () {
         this.contents = this.initText(this.text.text);
     },
     mounted () {
-        this.root = document.getElementById('root');
-        let content = this.getRectContent();
-        this.rectContent = content;
-        this.outputContnt(content);
+        setTimeout(function () {
+            const content = this.getRectContent();
+            this.outputContnt(content);
+        }.bind(this),200);
     },
     methods: {
         initText: function (text) {
@@ -258,32 +259,43 @@ export default {
             return result
         },
         getRectContent () {
-            let h1 = this.root.getElementsByTagName('h1');
-            return Array.prototype.map.call(h1, h1El => {
-                let content = '';
-                Array.prototype.forEach.call(h1El.childNodes, node => {
+            let result = [];
+            this.root = document.getElementById('root');
+            const h1s = this.root.getElementsByTagName('h1');
+            for (const h1 of h1s) {
+                let h1Content = '';
+                for(const node of h1.childNodes) {
                     if (node.nodeType === 3) {
-                        content = node.nodeValue;
+                        h1Content = node.nodeValue;
                     }
-                });
-                let parent = h1El.parentElement;
-                let rect = parent.getBoundingClientRect();
-                rect = {top: rect.top, bottom: rect.bottom}
-                let h2 = parent.getElementsByTagName('h2');
-                let children = Array.prototype.map.call(h2, h2El => {
-                    let parent = h2El.parentElement;
-                    let rect = parent.getBoundingClientRect();
-                    rect = {top: rect.top, bottom: rect.bottom}
-                    let content = '';
-                    Array.prototype.forEach.call(h2El.childNodes, node => {
+                };
+                const h1ParentElement = h1.parentElement;
+                const {top, bottom} = h1ParentElement.getBoundingClientRect();
+                const h1Rect = {top, bottom};
+                let children = [];
+                const h2s = h1ParentElement.getElementsByTagName('h2');
+                for (const h2 of h2s) {
+                    let h2Content = '';
+                    for(const node of h2.childNodes) {
                         if (node.nodeType === 3) {
-                            content =  node.nodeValue;
+                            h2Content = node.nodeValue;
                         }
+                    };
+                    const h2ParentElement = h2.parentElement;
+                    const {top, bottom} = h2ParentElement.getBoundingClientRect();
+                    const h2Rect = {top, bottom};
+                    children.push({
+                        rect: h2Rect,
+                        content: h2Content
                     });
-                    return {rect, content};
+                }
+                result.push({
+                    rect: h1Rect,
+                    content: h1Content,
+                    children
                 });
-                return {rect, content, children};
-            });
+            }
+            return result;
         },
         outputContnt(content) {
             this.$emit('input', content);
