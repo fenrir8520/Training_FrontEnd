@@ -298,11 +298,21 @@ var test2 = new Test();
 console.log('test1 : ' + test1.unique_value + ' | test2 : ' + test2.unique_value); //'test1 : Unique | test2 : Unique'
 console.log('test1 : ' + test1.proto_value + ' | test2 : ' + test2.proto_value); //'test1 : Prototype | test2 : Prototype'
 
-test1.unique_value = 'test1_Unique';
-test1.proto_value = 'test1_Prototype';
 
+test1.unique_value = 'test1_Unique';
+Test.prototype.proto_value = 'PROTOTYPE';
 console.log('test1 : ' + test1.unique_value + ' | test2 : ' + test2.unique_value); //'test1 : test1_Unique | test2 : Unique'
-console.log('test1 : ' + test1.proto_value + ' | test2 : ' + test2.proto_value); //'test1 : test1_Prototype | test2 : test1_Prototype'
+console.log('test1 : ' + test1.proto_value + ' | test2 : ' + test2.proto_value); //'test1 : PROTOTYPE | test2 : PROTOTYPE'
+
+
+test1.proto_value = 'test1_Prototype';
+console.log('test1 : ' + test1.proto_value + ' | test2 : ' + test2.proto_value); //'test1 : test1_Prototype | test2 : PROTOTYPE'
+
+
+Test.prototype.proto_value = '__PROTOTYPE__';
+console.log('test1 : ' + test1.proto_value + ' | test2 : ' + test2.proto_value); //'test1 : test1_Prototype | test2 : __PROTOTYPE__'
+
+
 
 \`\`\`
 
