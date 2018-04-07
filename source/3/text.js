@@ -22,7 +22,7 @@ var num1 = 1;
 var num2 = 2 * 10;
 var num3 = 0;
 var num4 = -35;
-var num5 = num1 + num2 + num3 + num4 + num5;
+var num5 = num1 + num2 + num3 + num4;
 var num6 = num5 + '20';
 console.log(num6); // ??
 \`\`\`
@@ -78,7 +78,7 @@ var arr1 = [
 ## String
 \`length\` 文字数
 
-\`concat\` 文字数を結合する
+\`concat\` 文字を結合する
 
 \`trim\` 先頭と末尾の半角スペースを削除する
 
@@ -119,7 +119,7 @@ str3.split('/') // ['www', 'creative', 'resource', 'institute.com']
 
 \`filter\` 配列の数だけ引数に渡した関数を実行し、関数からreturnされた値がtrueのときの値のみの配列を作成する
 
-\`includes\` 配列の数だけ引数に渡した関数を実行し、関数からreturnされた値がtrueのときの値のみの配列を作成する(es2015)
+\`includes\` (es2015)
 
 \`Array.isArray\` 配列かどうか
 \`\`\`
@@ -151,6 +151,16 @@ Array.isArray(arr) // true
 
 ## Object
 \`Object.keys\` オブジェクトのkeyを配列で取り出す
+\`\`\`
+var obj = {
+    a: 'AAA',
+    b: 'BBB',
+    c: {
+        CC: 'CCC'
+    }
+};
+\`\`\`
+
 
 # オブジェクト
 ## 定義方法
@@ -293,6 +303,28 @@ test1.proto_value = 'test1_Prototype';
 
 console.log('test1 : ' + test1.unique_value + ' | test2 : ' + test2.unique_value); //'test1 : test1_Unique | test2 : Unique'
 console.log('test1 : ' + test1.proto_value + ' | test2 : ' + test2.proto_value); //'test1 : test1_Prototype | test2 : test1_Prototype'
+
+\`\`\`
+
+## なぜコンストラクタを使うのか
+なぜオブジェクトをコピーしていくのではなくコンストラクタからインスタンスを作成するのでしょうか
+
+それはJavaScriptにおいてオブジェクトのコピーはシャローコピーだからである。
+\`\`\`
+var obj1 = {
+    a: 10,
+    b: 20
+};
+
+var obj2 = obj1;
+
+obj2.a = 5;
+console.log(obj1) // {a: 5, b: 20}
+\`\`\`
+またインスタンスに引数を渡せたり、インスタンス化時にメソッドを実行できる、protorype、コンストラクタの継承等
+非常に有用な機能が使える
+
+\`\`\`
 
 \`\`\`
 
