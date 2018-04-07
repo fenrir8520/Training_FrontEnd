@@ -12940,14 +12940,29 @@ var obj2 = obj1;
 obj2.a = 5;
 console.log(obj1) // {a: 5, b: 20}
 \`\`\`
+
 またインスタンスに引数を渡せたり、インスタンス化時にメソッドを実行できる、protorype、コンストラクタの継承等
 非常に有用な機能が使える
 
 \`\`\`
+function Parent (name) {
+    this.name = name;
+    this.type = 'parent';
+    this.callType(); //インスタンス化時に実行される
+}
+Parent.prototype.getName = function () {
+    return this.name;
+}
+Parent.prototype.callType = function () {
+    console.log(this.type);
+}
 
+function Children (name) {
+    Parent.call(this, name);
+}
+Children.prototype = Object.create(Parent.prototype);
+// ParentのコンストラクタをChildrenに継承する。
 \`\`\`
-
-
 `;
 
 /* harmony default export */ __webpack_exports__["a"] = ({
