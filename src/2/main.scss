@@ -1,0 +1,26 @@
+@import '../scss/v1/common';
+
+//main
+$mainBorderColor1: #959595;
+
+.hamburger_icon {
+  @include ham_menu_base();
+}
+
+.main {
+  overflow: auto;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .top {
+    @include top_base();
+  }
+
+  .contents {
+    padding-left: 20%;
+    .side_menu {
+      @include side_menu_base();
+    }
+  }
+}

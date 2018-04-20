@@ -1,0 +1,63 @@
+$codeBackgroundColor: rgba(#000112, 0.7);
+$inCodeBackgroundColor: rgba(#3c3e6c, 0.8);
+
+hr {
+  margin: 25px 0;
+}
+
+pre {
+  background-color: $codeBackgroundColor;
+  border: 1px solid #888;
+  padding: 0 10px;
+}
+
+.contents {
+  position: relative;
+  color: $contentFontColor;
+  background: linear-gradient(to left, rgba($backgroundColor,0.7) 0%,rgba($backgroundColor,0.9) 40%,rgba($backgroundColor,1) 80%);
+  h1 {
+    font-size: 22px;
+    border-bottom: 1px solid #ccc;
+    // color: $hamburgerIconColor;
+  }
+  h2 {
+    font-size: 18px;
+    text-decoration: underline;
+  }
+}
+
+.page {
+  padding: 80px 0;
+  min-height: 100vh;
+  background: linear-gradient(to left, rgba(#fff,0.9) 0%,rgba(#fcfcfc,1) 59%,rgba(#fff,1) 100%);
+  &.active_page {
+    opacity: 1;
+    z-index: 2;
+  }
+}
+
+.block1 {
+  padding: 30px 20px;
+  box-sizing: border-box;
+}
+
+.block2 {
+  padding: 10px 20px;
+  box-sizing: border-box;
+}
+
+.division {
+  padding: 40px 0 20px;
+  margin: 0 20px;
+  line-height: 1.8;
+}
+
+.in_code {
+  background-color: $inCodeBackgroundColor;
+  padding: 0 5px;
+  font-family: monospace;
+}
+
+.bold {
+  font-weight: bold;
+}
