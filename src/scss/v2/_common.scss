@@ -4,6 +4,7 @@ $mainBorderColor1: #959595;
 @import "side_menu";
 @import "top_menu";
 @import "text_content";
+@import "../styles/darcula";
 
 * {
   margin: 0;
@@ -33,6 +34,9 @@ a {
 }
 
 #app {
+  .hljs {
+    background: unset;
+  }
 }
 
 [v-cloak] {
