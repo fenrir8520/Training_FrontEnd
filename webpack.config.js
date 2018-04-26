@@ -5,14 +5,21 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 // ディレクトリ構造を保ったままdistする
 let srcPath = path.resolve(__dirname, 'src');
 let targetFiles = glob.sync(`${srcPath}/**/main.js`);
-console.log(targetFiles);
 
 let entryFiles = {};
 targetFiles.forEach(item => {
     let key = item.replace(`${srcPath}/`, '');
     entryFiles[key] = item;
 });
-console.log(entryFiles);
+
+const targetHtmlFiles = glob.sync(`${srcPath}/*/index.html`);
+const copyTarget = targetHtmlFiles.map(item => {
+    return {
+        from: item,
+        to: item.replace(srcPath, '.')
+    };
+});
+
 module.exports = {
     mode: process.env.NODE_ENV || 'development',
     entry: entryFiles,
@@ -69,12 +76,6 @@ module.exports = {
     plugins: [
         new CopyWebpackPlugin([
             {
-                from: 'src/*/index.html',
-                test: /(\d+)\/index\.html$/,
-                to: '[1]/[name].[ext]',
-                exclude: /node_modules/
-            },
-            {
                 from: 'src/index.html',
                 toType: 'template',
                 to: '[name].[ext]'
@@ -84,6 +85,6 @@ module.exports = {
                 toType: 'dir',
                 to: 'images/'
             }
-        ])
+        ].concat(copyTarget))
     ]
 };
