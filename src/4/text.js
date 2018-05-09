@@ -111,6 +111,20 @@ target.addEventListener('click', function () {
 });
 \`\`\`
 
+# オブジェクトでDOMを管理
+DOMを管理できる簡単なインスタンスを作ってみましょう
+
+作るものとしては\`input\`タグに文字を入力したら\`p\`タグ内に入力した文字が出力されるもの
+
+出来上がるDOMはこんなイメージ
+\`\`\`
+<div id="root">
+    <p>{{ inputに入力した文字 }}</p>
+    <input type="text">
+</div>
+\`\`\`
+
+\`<div id="root">\`に対してインスタンスをappendChildする感じで作ります
 `
 
 export default {
