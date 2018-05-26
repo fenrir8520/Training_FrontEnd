@@ -125,6 +125,28 @@ DOMを管理できる簡単なインスタンスを作ってみましょう
 \`\`\`
 
 \`<div id="root">\`に対してインスタンスをappendChildする感じで作ります
+\`\`\`
+function Test () {
+    this.text = 'aa';
+    this.DOM = {
+        p: document.createElement('p'),
+        input: document.createElement('input')
+    };
+    this.init();
+}
+
+Test.prototype.init = function () {
+    var target = document.getElementById('root');
+    this.DOM.input.addEventListener('input', this.handleInput.bind(this), false);
+    target.appendChild(this.DOM.p);
+    target.appendChild(this.DOM.input);
+}
+Test.prototype.handleInput = function (e) {
+    this.DOM.p.innerText = e.target.value;
+}
+\`\`\`
+
+
 `
 
 export default {
