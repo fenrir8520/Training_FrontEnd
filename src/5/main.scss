@@ -1,0 +1,30 @@
+$pink: #F00092;
+$buttonHoveredPink: rgba(#f00092, 0.8);
+$buttonHoveredBlue: #021cc4;
+$darkBlue: rgba(22, 28, 196, 0.55);
+$blue: rgba(#0033e8, 0.8);
+$backgroundColor: #03001A;
+$overRayBackgroundColor: rgba(#03001A, 0.8);
+$overRayBackgroundColor2: #0033e8;
+$contentFontColor: #c8d1dd;
+
+@import '../scss/v2/common';
+@import '../scss/v2/desert';
+
+//main
+$mainBorderColor1: #959595;
+
+.main {
+  @include top2_base();
+
+  .contents {
+    display: flex;
+    .side_menu {
+      @include side_menu_base();
+    }
+
+    .content_area {
+      width: 80%;
+    }
+  }
+}

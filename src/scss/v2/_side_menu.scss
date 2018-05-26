@@ -1,0 +1,89 @@
+$sideMenuColor: $backgroundColor;
+$sideMenuFontColor: #3f536f;
+$displaiedBackgroundColor: rgba(#142953, 0.5);
+$displaiedFontColor: #c1cddd;
+$hoveredFontColor: #c1cddd;
+
+@mixin side_menu_base () {
+  left: 0;
+  top: 0;
+  position: sticky;
+  padding: 20px 0;
+  height: 100vh;
+  width: 20%;
+  box-sizing: border-box;
+  background-color: $sideMenuColor;
+  color: $sideMenuFontColor;
+
+  .list_wrapper {
+    height: 100%;
+    overflow-y: scroll;
+    &::-webkit-scrollbar-style {
+      display: none;
+    }
+
+    .index {
+      padding: 3px 10px 3px 20px;
+      transition: 0.2s;
+      box-sizing: border-box;
+      position: relative;
+      cursor: pointer;
+      &::after {
+        content: '';
+        display: block;
+        width: 0;
+        left: 50%;
+        bottom: 0;
+        position: absolute;
+        height: 1px;
+        background-color: $pink;
+        transition: 0.4s;
+      }
+      &:hover:not(.display) {
+        color: $hoveredFontColor;
+        &::after {
+          width: calc(100% - 30px);
+          left: 20px;
+        }
+      }
+    }
+
+    .sub_index {
+      padding: 3px 10px 3px 40px;
+      transition: 0.2s;
+      position: relative;
+      box-sizing: border-box;
+      cursor: pointer;
+      &::after {
+        content: '';
+        display: block;
+        width: 0;
+        left: 50%;
+        bottom: 0;
+        position: absolute;
+        height: 1px;
+        background-color: $pink;
+        transition: 0.4s;
+      }
+      &:hover:not(.display) {
+        color: $hoveredFontColor;
+        &::after {
+          width: calc(100% - 50px);
+          left: 40px;
+        }
+      }
+    }
+
+    .display {
+      color: $displaiedFontColor;
+      background-color: $displaiedBackgroundColor;
+      border-right: 0;
+    }
+
+    .sub_tree li:first-of-type {
+      .display {
+        border-top: 0;
+      }
+    }
+  }
+}

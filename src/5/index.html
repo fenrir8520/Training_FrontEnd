@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <link href="https://fonts.googleapis.com/css?family=Antic+Slab|Josefin+Slab|Dosis" rel="stylesheet">
+        <title>第5回</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script>
+    </head>
+    <body>
+        <div id="app" v-cloak>
+            <div id="main" class="main" @scroll="getScrollTop">
+                <top-panel :documents="rectContent" :times="2" @side-jump="jump">
+                    <template slot="times">
+                        The 5th
+                    </template>
+                    <template slot="lecture_theme">
+                        Ajax API
+                    </template>
+                    <template slot="message">
+                        第五回目。APIとは何か。Ajaxとは何か。ひと昔前ならお店のホームページを
+                        作るぐらいならあまり関係はなかったのですが、今はGoogle MAPを埋め込むのは
+                        当たり前になってきており、そこでAjax等の技術が用いられています。
+                        この当たり前になったテクノロジーを理解しないとシステムは作れないのでしっかり
+                        自分の中に落とし込みましょう。
+                        APIを用いて用意したサーバーとAjax通信してみましょう。
+                    </template>
+                </top-panel>
+                <div id="root" class="contents">
+                    <side-panel :documents="rectContent" :scroll-top="scrollTop"
+                                @side-jump="jump">
+                    </side-panel>
+                    <markdown-text :text="text" v-model="rectContent"></markdown-text>
+                </div>
+            </div>
+        </div>
+        <script src="./main.js"></script>
+    </body>
+</html>

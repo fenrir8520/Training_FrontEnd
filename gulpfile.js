@@ -53,6 +53,7 @@ gulp.task('copy-img', () => {
     gulp.src(['./source/**/*.jpg',
         './source/**/*.jpeg',
         './source/**/*.gif',
+        './source/**/*.svg',
         './source/**/*.png'
     ], {
         base: './source/'

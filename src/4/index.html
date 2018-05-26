@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <link href="https://fonts.googleapis.com/css?family=Antic+Slab|Josefin+Slab|Dosis" rel="stylesheet">
+        <title>第4回</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script>
+    </head>
+    <body>
+        <div id="app" v-cloak>
+            <div id="main" class="main" @scroll="getScrollTop">
+                <top-panel :documents="rectContent" :times="2" @side-jump="jump">
+                    <template slot="times">
+                        The 4th
+                    </template>
+                    <template slot="lecture_theme">
+                        this & mini application
+                    </template>
+                    <template slot="message">
+                        第四回目。JavaScriptは他言語と違ってthisの参照先が
+                        コロコロ変わります。このthisをしっかり押さえられれば
+                        オブジェクトは結構使いこなせるようになるので、がんばって
+                        身につけましょう。 <br>
+                        あと簡単な、Webアプリケーションを作ってみましょう。
+                    </template>
+                </top-panel>
+                <div id="root" class="contents">
+                    <side-panel :documents="rectContent" :scroll-top="scrollTop"
+                                @side-jump="jump">
+                    </side-panel>
+                    <markdown-text :text="text" v-model="rectContent"></markdown-text>
+                </div>
+            </div>
+        </div>
+        <script src="./main.js"></script>
+    </body>
+</html>

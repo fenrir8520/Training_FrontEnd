@@ -1,0 +1,44 @@
+//main
+$mainBorderColor1: #959595;
+
+@import "side_menu";
+@import "top_menu";
+@import "text_content";
+@import "../styles/darcula";
+
+* {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-weight: normal;
+  text-decoration: none;
+}
+
+body {
+  font-size: 14px;
+  font-family: "Dosis", sans-serif;
+  background-color: #03001A;
+}
+
+p {
+  margin: 10px;
+}
+
+a {
+  color: #666;
+  transition: 0.2s;
+  text-decoration: underline;
+  &:hover {
+    color: #999;
+  }
+}
+
+#app {
+  .hljs {
+    background: unset;
+  }
+}
+
+[v-cloak] {
+  opacity: 0;
+}

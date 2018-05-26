@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link href="https://fonts.googleapis.com/css?family=Antic+Slab|Josefin+Slab|Dosis" rel="stylesheet">
+        <title>第1回</title>
+    </head>
+    <body>
+        <div id="app" v-cloak @scroll="getScrollTop">
+            <div class="main">
+                <top-panel :documents="rectContent" :times="1" @side-jump="jump">
+                    <template slot="title_left">
+                        -Intro
+                    </template>
+                    <template slot="title_right">
+                        duction-
+                    </template>
+                    <p slot="title">
+                        第一回フロントエンド勉強会
+                    </p>
+                    <p slot="message">
+                        記念すべき第一回目です。モダンなWeb系の技術ではフロントエンドは必須になってきたけど、
+                        かと言ってプログラミングだけ出来てもしょうがないよね。
+                        そこでデザインを直接教えるわけではないけど、トレンドなWebデザインも知って、そこに必要な
+                        技術を想像して解釈できる力も身につけて欲しい。
+                    </p>
+                </top-panel>
+                <div id="root" class="contents">
+                    <side-panel :documents="rectContent" :scroll-top="scrollTop"
+                                @side-jump="jump">
+                    </side-panel>
+                <markdown-text :text="text" v-model="rectContent"></markdown-text>
+                </div>
+            </div>
+        </div>
+        <script src="main.js"></script>
+        <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+    </body>
+</html>
